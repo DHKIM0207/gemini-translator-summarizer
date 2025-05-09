@@ -1,0 +1,46 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 파일 구조 안내
+
+## 핵심 구성 파일
+
+- [manifest.json](mdc:manifest.json): 크롬 확장 프로그램 설정 파일
+- [background.js](mdc:background.js): 백그라운드 스크립트 (API 통신 담당)
+- [popup.html](mdc:popup.html): 확장 프로그램 팝업 UI
+- [popup.js](mdc:popup.js): 팝업 기능 구현
+
+## 디렉토리 구조
+
+### 챗봇 UI
+- `chatbot_ui/` 디렉토리: 챗봇 인터페이스 관련 파일
+  - [chatbot_ui/chatbot.html](mdc:chatbot_ui/chatbot.html): 챗봇 HTML 구조
+  - [chatbot_ui/chatbot.css](mdc:chatbot_ui/chatbot.css): 챗봇 스타일시트
+  - [chatbot_ui/chatbot.js](mdc:chatbot_ui/chatbot.js): 챗봇 기능 구현
+
+### 컨텐츠 스크립트
+- `content/` 디렉토리: 웹페이지 내 동작 관련 파일
+  - content 스크립트: 웹페이지에 삽입되어 페이지 콘텐츠 접근 및 UI 통합
+
+### 라이브러리
+- `lib/` 디렉토리: 외부 라이브러리
+  - marked.min.js: 마크다운 파싱 라이브러리
+
+### 아이콘
+- `icons/` 디렉토리: 확장 프로그램 아이콘
+
+## 통신 흐름
+
+1. 사용자가 팝업/챗봇 UI에서 액션 수행
+2. content 스크립트가 웹페이지 콘텐츠 접근 및 UI 통합
+3. background 스크립트가 Gemini API와 통신
+4. 결과가 UI에 표시됨
+
+## 신규 파일 추가 시 규칙
+
+- 기능별로 적절한 디렉토리에 파일을 배치합니다.
+- 공통 기능은 별도의 유틸리티 파일로 분리하여 재사용성을 높입니다.
+- 이 규칙 파일은 프로젝트 구조가 변경될 때마다 업데이트합니다.
+

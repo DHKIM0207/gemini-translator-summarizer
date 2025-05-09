@@ -1,0 +1,60 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# AI 도구 사용 규칙
+
+## 순차적 사고 (Sequential Thinking) 활용
+
+복잡한 문제 해결이나 기능 구현 시 [mcp_server-sequential-thinking_sequentialthinking] 도구를 사용하여 체계적으로 접근합니다:
+
+1. 문제를 작은 단계로 분해합니다.
+2. 각 단계에서 발생할 수 있는 문제점을 미리 예상합니다.
+3. 해결책을 순차적으로 구현합니다.
+4. 필요 시 이전 단계를 수정하거나 추가 단계를 계획합니다.
+5. 최종 솔루션이 완성된 후 다시 검토합니다.
+
+예시:
+```
+[mcp_server-sequential-thinking_sequentialthinking] 도구를 사용하여:
+1. 문제 정의: 대화창에 풀스크린 기능 추가
+2. HTML/CSS/JS 변경사항 식별
+3. 각 변경사항 구현
+4. 브라우저 호환성 고려
+5. 최종 검토
+```
+
+## 라이브러리 문서 참조 (Context7)
+
+외부 라이브러리를 사용할 때는 반드시 [mcp_context7] 도구를 사용하여 최신 문서를 참조합니다:
+
+1. 먼저 [mcp_context7]로 라이브러리 ID를 확인합니다.
+2. 그 다음 [mcp_context7]로 문서를 가져옵니다.
+3. 문서를 바탕으로 라이브러리를 올바르게 사용합니다.
+
+예시:
+```
+1. [mcp_context7] 도구로 "marked"의 라이브러리 ID 확인
+2. [mcp_context7-mcp_get-library-docs] 도구로 marked 라이브러리 문서 열람
+3. 문서에 맞게 marked.js 구현
+```
+
+## 추천 활용 사례
+
+### 새로운 기능 개발
+- [mcp_server-sequential-thinking_sequentialthinking]으로 전체 접근 방식 계획
+- 필요한 라이브러리가 있다면 [mcp_context7]로 문서 참조
+
+### 버그 수정
+- [mcp_server-sequential-thinking_sequentialthinking]으로 버그의 원인과 해결 방안을 단계별로 탐색
+
+### 코드 리팩토링
+- [mcp_server-sequential-thinking_sequentialthinking]으로 리팩토링 계획 수립 및 실행
+
+## 중요 규칙
+
+- 복잡한 작업에는 항상 [mcp_server-sequential-thinking_sequentialthinking]을 사용합니다.
+- 외부 라이브러리 사용 시 반드시 [mcp_context7]를 사용합니다.
+- 한국어 응답을 위해 모든 출력은 한글로 작성합니다.
+

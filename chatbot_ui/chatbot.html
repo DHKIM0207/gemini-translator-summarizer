@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gemini 챗봇</title>
+  <link rel="stylesheet" href="chatbot.css">
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <script src="../lib/marked.min.js"></script>
+</head>
+
+<body>
+  <div id="chatbot-container">
+    <header id="chatbot-header">
+      <div class="header-title">
+        <span class="material-symbols-rounded">smart_toy</span>
+        <h2>Gemini AI 도우미</h2>
+      </div>
+      <div class="header-icons">
+        <span class="material-symbols-rounded" id="fullscreen-btn" title="전체 화면">fullscreen</span>
+        <span class="material-symbols-rounded hidden" id="fullscreen-exit-btn" title="전체 화면 종료">fullscreen_exit</span>
+        <span class="material-symbols-rounded" id="settings-btn" title="API 키 설정">settings</span>
+        <span class="material-symbols-rounded" id="close-chatbot-btn" title="챗봇 닫기">close</span>
+      </div>
+    </header>
+
+    <div id="api-key-section" class="hidden">
+      <div class="settings-container">
+        <h3>API 키 설정</h3>
+        <div class="input-group">
+          <label for="apiKeyInput">Gemini API 키</label>
+          <input type="password" id="apiKeyInput" placeholder="API 키를 여기에 붙여넣으세요">
+        </div>
+        <button id="saveApiKeyBtn">저장</button>
+        <p id="apiKeyMsg"></p>
+      </div>
+    </div>
+
+    <div id="chat-actions-predefined">
+      <button id="summarizePageBtn">
+        <span class="material-symbols-rounded">summarize</span>
+        <span>페이지 요약</span>
+      </button>
+      <button id="translatePageBtn">
+        <span class="material-symbols-rounded">translate</span>
+        <span>페이지 번역</span>
+      </button>
+      <button id="translateSelectionBtn">
+        <span class="material-symbols-rounded">text_select_end</span>
+        <span>선택 영역 번역</span>
+      </button>
+    </div>
+
+    <div id="chat-messages">
+      <div class="message bot-message">
+        <div class="message-avatar">
+          <span class="material-symbols-rounded">smart_toy</span>
+        </div>
+        <div class="message-content">
+          <p>안녕하세요! 무엇을 도와드릴까요? 페이지 전체에 대해서는 '페이지 요약' 또는 '페이지 번역' 버튼을, 선택한 텍스트에 대해서는 '선택 영역 번역' 버튼을 사용하거나, 직접 메시지를
+            입력해주세요.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div id="image-preview-container" class="hidden">
+      <div id="image-preview-wrapper">
+        <img id="image-preview" src="" alt="미리보기">
+        <button id="remove-image" title="이미지 제거">
+          <span class="material-symbols-rounded">close</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="chat-input-area">
+      <textarea id="userInput" placeholder="메시지 입력 또는 명령어 (예: 요약)..."></textarea>
+      <button id="image-upload-btn" title="이미지 첨부">
+        <span class="material-symbols-rounded">image</span>
+      </button>
+      <input type="file" id="image-file-input" accept="image/*" class="hidden">
+      <button id="sendBtn">
+        <span class="material-symbols-rounded">send</span>
+      </button>
+    </div>
+    <div id="loader" class="hidden"></div>
+  </div>
+  <script type="module" src="chatbot.js"></script>
+</body>
+
+</html>

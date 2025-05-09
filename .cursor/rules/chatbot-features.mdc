@@ -1,0 +1,56 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 챗봇 기능 가이드
+
+## 챗봇 UI 구조
+
+챗봇 UI는 다음 파일들로 구성됩니다:
+- [chatbot_ui/chatbot.html](mdc:chatbot_ui/chatbot.html): HTML 구조 정의
+- [chatbot_ui/chatbot.css](mdc:chatbot_ui/chatbot.css): 스타일시트
+- [chatbot_ui/chatbot.js](mdc:chatbot_ui/chatbot.js): 기능 구현 스크립트
+
+## 주요 기능 구현
+
+### 1. 메시지 처리
+- `addMessage` 함수를 사용하여 사용자 및 봇 메시지를 추가합니다.
+- 봇 메시지는 Markdown 지원을 위해 marked.js 라이브러리를 사용합니다.
+
+### 2. 페이지 콘텐츠 처리
+- `getPageContentForChat`: 현재 페이지의 콘텐츠를 가져옵니다.
+- `getSelectedTextFromPage`: 사용자가 선택한 텍스트를 가져옵니다.
+
+### 3. Gemini API 통신
+- `initiateGeminiRequest`: Gemini API로 요청을 보내고 응답을 스트리밍합니다.
+- 스트리밍 응답 처리를 위한 이벤트 리스너가 구현되어 있습니다.
+
+### 4. 사용자 액션
+- 페이지 요약: `handleSummarizePage` 함수
+- 페이지 번역: `handleTranslatePage` 함수
+- 선택 영역 번역: `handleTranslateSelectedText` 함수
+- 일반 질문: `handleDirectUserInput` 함수
+
+### 5. 풀스크린 모드
+- `toggleFullscreen`: 풀스크린 모드 전환
+- `isFullscreen`: 현재 풀스크린 상태 확인
+- `updateFullscreenUI`: 풀스크린 상태에 따른 UI 업데이트
+
+## 기능 확장 가이드
+
+새로운 챗봇 기능을 추가할 때는 다음 패턴을 따릅니다:
+
+1. HTML에 필요한 UI 요소 추가 ([chatbot.html](mdc:chatbot_ui/chatbot.html))
+2. CSS에 스타일 정의 추가 ([chatbot.css](mdc:chatbot_ui/chatbot.css))
+3. JavaScript에서 DOM 요소 참조 가져오기 및 이벤트 리스너 추가 ([chatbot.js](mdc:chatbot_ui/chatbot.js))
+4. 핸들러 함수 구현
+5. 필요한 경우 background.js와의 통신 구현
+6. 브라우저 호환성 처리
+
+## 주의사항
+
+- UI 업데이트는 비동기적으로 처리하여 사용자 경험을 해치지 않도록 합니다.
+- 에러 처리 로직을 항상 포함합니다.
+- 대화 맥락 유지를 위한 로직이 필요한 경우 background.js와의 통신을 고려합니다.
+

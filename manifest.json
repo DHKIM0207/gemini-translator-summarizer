@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini 페이지 도우미 (챗봇)",
+  "version": "3.1",
+  "description": "현재 페이지와 상호작용하는 Gemini AI 챗봇입니다. 요약 및 번역 기능을 제공합니다.",
+  "permissions": [
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content/content.js"],
+      "css": ["content/content.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "chatbot_ui/chatbot.html",
+        "chatbot_ui/chatbot.css",
+        "chatbot_ui/chatbot.js",
+        "lib/Readability.js",
+        "lib/google-generative-ai.esm.js",
+		"lib/marked.min.js"
+      ],
+      "matches": ["<all_urls>"]
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_security_policy": {
+    // 변경된 부분: script-src 'self' 만 남김 (외부 CDN 제거)
+    "extension_pages": "script-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://fonts.gstatic.com data:; object-src 'self'"
+  }
+}

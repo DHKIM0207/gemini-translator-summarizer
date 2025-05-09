@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Gemini 도우미 v2</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap">
+    <style>
+        :root {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #f9fafb;
+            --text-color: #1f2937;
+            --text-light: #6b7280;
+            --border-color: #e5e7eb;
+            --background-color: #ffffff;
+            --background-alt: #f3f4f6;
+            --success-color: #10b981;
+            --success-hover: #059669;
+            --error-color: #ef4444;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.04), 0 4px 6px rgba(0, 0, 0, 0.05);
+            --radius-sm: 0.375rem;
+            --radius-md: 0.5rem;
+            --radius-lg: 0.75rem;
+            --transition-fast: 0.15s ease;
+            --transition-normal: 0.3s ease;
+        }
+
+        body {
+            font-family: 'Noto Sans KR', system-ui, sans-serif;
+            width: 380px;
+            padding: 0;
+            background-color: var(--background-alt);
+            color: var(--text-color);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 20px;
+            background-color: var(--background-color);
+            box-shadow: var(--shadow-lg);
+            border-radius: var(--radius-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+            margin-bottom: 1.5rem;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            right: -100px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary-color), #818cf8);
+            border-radius: 0 0 50% 50% / 0 0 100% 100%;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        h1 {
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            text-align: center;
+            margin: 0 0 0.5rem 0;
+            position: relative;
+        }
+
+        h1::after {
+            content: '';
+            display: block;
+            width: 50px;
+            height: 3px;
+            background: linear-gradient(to right, var(--primary-color), #818cf8);
+            margin: 0.5rem auto 0;
+            border-radius: 2px;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        label .material-symbols-rounded {
+            font-size: 1.25rem;
+            color: var(--primary-color);
+        }
+
+        input[type="text"],
+        input[type="password"],
+        select {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            box-sizing: border-box;
+            font-size: 0.95rem;
+            background-color: var(--background-color);
+            transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus,
+        select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        input[type="password"]::placeholder {
+            font-family: sans-serif;
+            color: var(--text-light);
+        }
+
+        button {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Noto Sans KR', sans-serif;
+            transition: all var(--transition-fast);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        button:active {
+            transform: translateY(0);
+            box-shadow: var(--shadow-sm);
+        }
+
+        button .material-symbols-rounded {
+            font-size: 1.25rem;
+        }
+
+        button#saveKey {
+            background-color: var(--success-color);
+            margin-bottom: 1.5rem;
+        }
+
+        button#saveKey:hover {
+            background-color: var(--success-hover);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .action-buttons button {
+            flex-grow: 1;
+        }
+
+        #result-container {
+            margin-top: 1rem;
+            padding: 1.25rem;
+            background-color: rgba(243, 244, 246, 0.6);
+            backdrop-filter: blur(10px);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: var(--radius-md);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: var(--text-color);
+            flex-grow: 1;
+            border: 1px solid rgba(229, 231, 235, 0.8);
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow var(--transition-fast);
+        }
+
+        #result-container:hover {
+            box-shadow: var(--shadow-md);
+        }
+
+        .loader {
+            position: relative;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 3px solid rgba(229, 231, 235, 0.3);
+            border-top-color: var(--primary-color);
+            animation: spin 1s infinite linear;
+            margin: 1.5rem auto;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        hr::before {
+            content: 'OR';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 0 0.75rem;
+            background-color: var(--background-color);
+            color: var(--text-light);
+            font-size: 0.8rem;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .icon-button {
+            background-color: transparent;
+            padding: 0.25rem;
+            border-radius: 50%;
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            color: var(--text-light);
+            box-shadow: none;
+            transition: color var(--transition-fast), transform var(--transition-fast);
+        }
+
+        .icon-button:hover {
+            color: var(--primary-color);
+            background-color: transparent;
+            transform: scale(1.1);
+            box-shadow: none;
+        }
+
+        .icon-button .material-symbols-rounded {
+            font-size: 1.5rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <button class="icon-button" id="infoBtn" title="정보">
+            <span class="material-symbols-rounded">info</span>
+        </button>
+
+        <div class="header">
+            <h1>Gemini 도우미 v2</h1>
+        </div>
+
+        <div class="form-group">
+            <label for="apiKey">
+                <span class="material-symbols-rounded">key</span>
+                Gemini API 키
+            </label>
+            <input type="password" id="apiKey" placeholder="API 키를 입력하세요">
+            <button id="saveKey">
+                <span class="material-symbols-rounded">save</span>
+                키 저장
+            </button>
+        </div>
+
+        <hr>
+
+        <div class="form-group">
+            <label for="targetLang">
+                <span class="material-symbols-rounded">translate</span>
+                번역 대상 언어
+            </label>
+            <select id="targetLang">
+                <option value="Korean">한국어</option>
+                <option value="English">영어</option>
+                <option value="Japanese">일본어</option>
+                <option value="Chinese">중국어 (간체)</option>
+                <option value="Spanish">스페인어</option>
+                <option value="French">프랑스어</option>
+                <option value="German">독일어</option>
+                <option value="Vietnamese">베트남어</option>
+            </select>
+        </div>
+
+        <div class="action-buttons">
+            <button id="summarizeBtn">
+                <span class="material-symbols-rounded">summarize</span>
+                페이지 요약
+            </button>
+            <button id="translateBtn">
+                <span class="material-symbols-rounded">translate</span>
+                페이지 번역
+            </button>
+        </div>
+
+        <div class="loader" id="loader"></div>
+        <div id="result-container">결과가 여기에 표시됩니다.</div>
+    </div>
+
+    <script type="module" src="popup.js"></script>
+</body>
+
+</html>

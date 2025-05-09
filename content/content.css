@@ -1,0 +1,82 @@
+/* 플로팅 액션 버튼 (FAB) 스타일 */
+#gemini-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 60px;
+  height: 60px;
+  background-color: #3b82f6; /* Gemini 파란색 계열 */
+  border-radius: 50%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 9999;
+  transition: transform 0.2s ease-in-out;
+}
+
+#gemini-fab:hover {
+  transform: scale(1.1);
+}
+
+#gemini-fab img {
+  width: 32px;
+  height: 32px;
+  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(200%) contrast(100%); /* 아이콘 흰색으로 */
+}
+
+/* 챗봇 iframe 스타일 */
+#gemini-chatbot-iframe {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 400px; /* 챗봇 창 너비 */
+  height: 100%;
+  border: none;
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.15);
+  z-index: 10000;
+  display: none; /* 초기에는 숨김 */
+  background-color: white; /* iframe 로딩 중 배경색 */
+  transition: transform 0.3s ease-out;
+  transform: translateX(100%); /* 오른쪽 바깥에 숨김 */
+}
+
+#gemini-chatbot-iframe.visible {
+  display: block;
+  transform: translateX(0); /* 오른쪽으로 슬라이드하며 나타남 */
+}
+
+/* 선택 영역 번역 호버 버튼 스타일 */
+#selection-translate-hover-btn {
+  position: absolute; /* 페이지 내용 기준 위치 */
+  /* display: none; 초기에는 숨김 - JS에서 제어 */
+  background-color: #3b82f6; /* 메인 색상 */
+  color: white;
+  border: none;
+  border-radius: 50%; /* 원형 버튼 */
+  width: 36px;   /* 버튼 크기 */
+  height: 36px;  /* 버튼 크기 */
+  padding: 0; /* 내부 여백 없음 */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  z-index: 10001; /* 챗봇 iframe보다 위에 오도록 (필요시 조정) */
+  transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
+  opacity: 0.9; /* 약간 투명하게 */
+  display: flex; /* 내부 아이콘 중앙 정렬 위해 - 초기값은 none이어야 함 */
+  justify-content: center;
+  align-items: center;
+  /* 초기 숨김 처리 */
+  display: none;
+}
+
+#selection-translate-hover-btn:hover {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+#selection-translate-hover-btn img {
+  width: 20px; /* 아이콘 크기 */
+  height: 20px;
+  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(200%) contrast(100%); /* 아이콘 흰색 */
+}
