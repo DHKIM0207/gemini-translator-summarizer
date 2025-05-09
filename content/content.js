@@ -10,6 +10,68 @@
   const chatIconUrl = 'https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/chat_bubble/default/24px.svg';
   const translateIconUrl = 'https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/translate/default/24px.svg';
 
+  // PDF 페이지인지 확인하는 함수 (새로 추가)
+  function isPdfPage() {
+    // URL이 .pdf로 끝나는지 확인
+    if (window.location.href.toLowerCase().endsWith('.pdf')) {
+      return true;
+    }
+
+    // Chrome PDF 뷰어의 특정 요소가 있는지 확인
+    if (document.querySelector('#viewerContainer') ||
+      document.querySelector('.pdfViewer') ||
+      document.querySelector('#viewer')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  // 현재 보이는 PDF 페이지의 텍스트 추출 (새로 추가)
+  async function extractPdfPageContent() {
+    try {
+      // PDF 뷰어 컨테이너 찾기
+      const viewerContainer = document.querySelector('#viewerContainer') ||
+        document.querySelector('.pdfViewer') ||
+        document.querySelector('#viewer');
+
+      if (!viewerContainer) {
+        console.warn("PDF 뷰어를 찾을 수 없습니다.");
+        return "";
+      }
+
+      // 현재 보이는 페이지 찾기
+      const visiblePages = Array.from(viewerContainer.querySelectorAll('.page'))
+        .filter(page => {
+          const rect = page.getBoundingClientRect();
+          return rect.top < window.innerHeight && rect.bottom > 0;
+        });
+
+      if (!visiblePages.length) {
+        console.warn("현재 보이는 PDF 페이지를 찾을 수 없습니다.");
+        return "";
+      }
+
+      // 보이는 페이지들의 텍스트 레이어에서 텍스트 추출
+      let pageTexts = [];
+      for (const page of visiblePages) {
+        const textLayer = page.querySelector('.textLayer');
+        if (!textLayer) continue;
+
+        const textElements = Array.from(textLayer.querySelectorAll('span'));
+        const pageText = textElements.map(span => span.textContent).join(' ');
+        if (pageText.trim()) {
+          pageTexts.push(pageText);
+        }
+      }
+
+      return pageTexts.join('\n\n');
+    } catch (error) {
+      console.error("PDF 텍스트 추출 중 오류:", error);
+      return "";
+    }
+  }
+
   function createFab() {
     fabButton = document.createElement('div');
     fabButton.id = 'gemini-fab';
@@ -221,8 +283,22 @@
     return false;
   });
 
-  // 페이지 내용 추출 함수 (백그라운드 요청)
+  // 페이지 내용 추출 함수 (백그라운드 요청 + PDF 지원 추가)
   async function extractPageContent() {
+    // PDF 페이지인 경우
+    if (isPdfPage()) {
+      console.log("PDF 페이지 감지됨: 내장 방식으로 텍스트 추출 시도");
+      // 직접 PDF 텍스트 추출
+      const pdfText = await extractPdfPageContent();
+      if (pdfText) {
+        console.log("PDF 페이지에서 텍스트 추출 성공");
+        return pdfText;
+      } else {
+        console.warn("PDF 페이지에서 텍스트 추출 실패, 백그라운드 방식 시도");
+      }
+    }
+
+    // PDF가 아니거나 PDF 텍스트 추출에 실패한 경우 기존 방식 사용
     return new Promise((resolve, reject) => {
       chrome.runtime.sendMessage({ type: "EXTRACT_PAGE_CONTENT_FROM_BG" }, response => {
         if (chrome.runtime.lastError) {
