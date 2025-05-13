@@ -106,18 +106,34 @@
   }
 
   function toggleChatbot() {
+    let isNewlyCreated = false;
     if (!chatbotIframe) {
       createChatbotIframe();
+      isNewlyCreated = true;
     }
     iframeVisible = !iframeVisible;
     if (iframeVisible) {
       chatbotIframe.classList.add('visible');
       if (fabButton) fabButton.style.display = 'none';
       hideHoverTranslateButton(); // 챗봇 열 때 호버 버튼 숨기기
+
+      // iframe이 새로 생성된 경우에는 onload 이벤트에서 isIframeReady를 설정하도록 함
+      // 이미 로드된 iframe인 경우에만 여기서 isIframeReady를 true로 설정
+      if (!isNewlyCreated) {
+        isIframeReady = true;
+
+        // 보류된 번역 요청이 있으면 즉시 처리 (새로 생성된 경우 onload에서 처리됨)
+        if (pendingHoverTranslationText) {
+          console.log("Processing pending translation after toggling chatbot.");
+          sendTranslationRequestToChatbot(pendingHoverTranslationText);
+          pendingHoverTranslationText = null; // 처리 후 초기화
+        }
+      }
     } else {
       if (chatbotIframe) chatbotIframe.classList.remove('visible');
       if (fabButton) fabButton.style.display = 'flex';
-      isIframeReady = false; // 닫힐 때 준비 안됨 상태로 (선택적, 다시 열 때 onload가 발생하도록)
+      isIframeReady = false; // 닫힐 때 준비 안됨 상태로
+      pendingHoverTranslationText = null; // 닫을 때 보류 중인 번역 텍스트 초기화
       // iframe을 DOM에서 제거하고 싶다면 여기서 제거 로직 추가
       // if (chatbotIframe) {
       //    chatbotIframe.remove();
