@@ -8,12 +8,34 @@ document.addEventListener('DOMContentLoaded', () => {
   const resultDiv = document.getElementById('result-container');
   const loader = document.getElementById('loader');
   const targetLangSelect = document.getElementById('targetLang');
+  const themeToggleButton = document.getElementById('themeToggle');
+  const themeIcon = themeToggleButton.querySelector('.material-symbols-rounded');
 
   // 저장된 API 키 로드
-  chrome.storage.local.get(['geminiApiKey'], (result) => {
+  chrome.storage.local.get(['geminiApiKey', 'theme'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
     }
+
+    // 테마 설정 로드 및 적용
+    if (result.theme === 'dark') {
+      document.documentElement.classList.add('dark-mode');
+      themeIcon.textContent = 'light_mode'; // 다크모드에서는 해 아이콘
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+      themeIcon.textContent = 'dark_mode'; // 라이트모드에서는 달 아이콘
+    }
+  });
+
+  // 테마 토글 버튼 이벤트 리스너
+  themeToggleButton.addEventListener('click', () => {
+    const isDarkMode = document.documentElement.classList.toggle('dark-mode');
+
+    // 아이콘 변경
+    themeIcon.textContent = isDarkMode ? 'light_mode' : 'dark_mode';
+
+    // 설정 저장
+    chrome.storage.local.set({ theme: isDarkMode ? 'dark' : 'light' });
   });
 
   // API 키 저장
@@ -38,10 +60,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 지금은 console에만 표시하고, resultDiv 초기화
     console.log(`[${type.toUpperCase()}] ${message}`);
     if (type === 'error') {
-        resultDiv.innerHTML = `<p class="error-message">${message}</p>`;
+      resultDiv.innerHTML = `<p class="error-message">${message}</p>`;
     } else if (type === 'success' && resultDiv.textContent.includes('결과가 여기에 표시됩니다.')) {
-        // 성공 메시지는 결과가 없을 때만 간략히 표시
-        resultDiv.innerHTML = `<p>${message}</p>`;
+      // 성공 메시지는 결과가 없을 때만 간략히 표시
+      resultDiv.innerHTML = `<p>${message}</p>`;
     }
     // 필요시 더 정교한 알림 시스템 구현
   }
@@ -126,9 +148,9 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             // Readability가 아무것도 반환하지 못한 경우 (예: 빈 페이지, 애플리케이션 페이지)
             // document.body.innerText로 다시 시도 (위의 func에서 이미 fallback 처리됨)
-             const fallbackResults = await chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                func: () => document.body.innerText || ""
+            const fallbackResults = await chrome.scripting.executeScript({
+              target: { tabId: tabId },
+              func: () => document.body.innerText || ""
             });
             resolve(fallbackResults[0].result);
           }
@@ -137,8 +159,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // 최종 fallback
           try {
             const fallbackResults = await chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                func: () => document.body.innerText || ""
+              target: { tabId: tabId },
+              func: () => document.body.innerText || ""
             });
             resolve(fallbackResults[0].result);
           } catch (finalError) {
@@ -152,9 +174,9 @@ document.addEventListener('DOMContentLoaded', () => {
   async function callGeminiApiStreaming(apiKey, promptText, resultElement) {
     const genAI = new GoogleGenerativeAI(apiKey);
     const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash-latest",
-        // 시스템 지시(System Instruction)를 사용하여 모델의 행동 양식이나 역할을 미리 정의할 수 있습니다.
-        // systemInstruction: "당신은 유능한 번역가이자 요약 전문가입니다.",
+      model: "gemini-1.5-flash-latest",
+      // 시스템 지시(System Instruction)를 사용하여 모델의 행동 양식이나 역할을 미리 정의할 수 있습니다.
+      // systemInstruction: "당신은 유능한 번역가이자 요약 전문가입니다.",
     });
 
 
@@ -183,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (accumulatedText.trim() === "") {
-          resultElement.textContent = "API로부터 응답을 받았으나 내용이 비어있습니다. 프롬프트를 확인하거나 다른 내용을 시도해보세요.";
+        resultElement.textContent = "API로부터 응답을 받았으나 내용이 비어있습니다. 프롬프트를 확인하거나 다른 내용을 시도해보세요.";
       }
 
     } catch (error) {
@@ -191,7 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let errorMessage = `API 스트리밍 오류: ${error.message || '알 수 없는 오류'}`;
       // Gemini API는 오류 응답에 상세 정보를 포함할 수 있습니다.
       if (error.cause && error.cause.message) { // 실제 오류 구조는 API 문서를 확인하세요.
-          errorMessage += `\n세부 정보: ${error.cause.message}`;
+        errorMessage += `\n세부 정보: ${error.cause.message}`;
       }
       resultElement.innerHTML = `<p class="error-message">${errorMessage}</p>`;
       throw error; // 에러를 다시 throw하여 handleAction에서 잡도록 함

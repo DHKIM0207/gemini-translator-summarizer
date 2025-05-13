@@ -82,6 +82,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     });
     return true; // 비동기 응답
   }
+  else if (request.type === "SET_THEME") {
+    // 테마 설정 저장
+    chrome.storage.local.set({ theme: request.theme }, () => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ success: false, error: chrome.runtime.lastError.message });
+      } else {
+        sendResponse({ success: true });
+      }
+    });
+    return true; // 비동기 응답
+  }
+  else if (request.type === "GET_THEME") {
+    // 저장된 테마 설정 가져오기
+    chrome.storage.local.get(['theme'], (result) => {
+      if (chrome.runtime.lastError) {
+        sendResponse({ theme: 'light', error: chrome.runtime.lastError.message });
+      } else {
+        sendResponse({ theme: result.theme || 'light' });
+      }
+    });
+    return true; // 비동기 응답
+  }
   else if (request.type === "GEMINI_CHAT_REQUEST") {
     // 스트리밍 API 호출
     const { apiKey, prompt, streamId } = request; // streamId는 챗봇 UI에서 스트리밍 응답을 식별하기 위함

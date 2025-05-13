@@ -15,6 +15,9 @@ const fullscreenBtn = document.getElementById('fullscreen-btn');
 const fullscreenExitBtn = document.getElementById('fullscreen-exit-btn');
 const chatbotContainer = document.getElementById('chatbot-container');
 
+// 테마 토글 버튼
+const themeToggleBtn = document.getElementById('theme-toggle-btn');
+
 const summarizePageBtn = document.getElementById('summarizePageBtn');
 const translatePageBtn = document.getElementById('translatePageBtn');
 const translateSelectionBtn = document.getElementById('translateSelectionBtn');
@@ -43,10 +46,19 @@ document.addEventListener('DOMContentLoaded', initializeChatbot);
 // chatbot 초기화 함수
 function initializeChatbot() {
   // 이전 API 키 로드
-  chrome.storage.local.get('geminiApiKey', (result) => {
+  chrome.storage.local.get(['geminiApiKey', 'theme'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
       currentApiKey = result.geminiApiKey;
+    }
+
+    // 테마 설정 로드 및 적용
+    if (result.theme === 'dark') {
+      document.documentElement.classList.add('dark-mode');
+      themeToggleBtn.textContent = 'light_mode'; // 다크모드에서는 해 아이콘
+    } else {
+      document.documentElement.classList.remove('dark-mode');
+      themeToggleBtn.textContent = 'dark_mode'; // 라이트모드에서는 달 아이콘
     }
   });
 
@@ -56,6 +68,9 @@ function initializeChatbot() {
   settingsBtn.addEventListener('click', toggleApiKeySection);
   saveApiKeyBtn.addEventListener('click', saveApiKey);
   closeChatbotBtn.addEventListener('click', closeChatbot);
+
+  // 테마 토글 버튼 이벤트 리스너
+  themeToggleBtn.addEventListener('click', toggleTheme);
 
   // 기능 버튼 이벤트 리스너
   summarizePageBtn.addEventListener('click', handleSummarizePage);
@@ -207,7 +222,7 @@ function handleFullscreenError(error) {
   }, 3000);
 }
 
-// 현재 풀스크린 상태 확인
+// 풀스크린 상태 확인 함수
 function isFullscreen() {
   return !!(
     document.fullscreenElement ||
@@ -789,4 +804,15 @@ function sendMessage() {
     // 이미지만 있는 경우 이미지 API 요청
     handleImageRequest("이 이미지에 대해 설명해주세요.", tempAttachedImage);
   }
+}
+
+// 테마 토글 함수
+function toggleTheme() {
+  const isDarkMode = document.documentElement.classList.toggle('dark-mode');
+
+  // 아이콘 변경
+  themeToggleBtn.textContent = isDarkMode ? 'light_mode' : 'dark_mode';
+
+  // 설정 저장
+  chrome.storage.local.set({ theme: isDarkMode ? 'dark' : 'light' });
 }

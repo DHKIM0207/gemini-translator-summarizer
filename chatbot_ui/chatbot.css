@@ -22,6 +22,23 @@
   --transition-normal: 0.3s ease;
 }
 
+:root.dark-mode {
+  --primary-color: #6366f1;
+  --primary-hover: #4f46e5;
+  --secondary-color: #1e1e2d;
+  --text-color: #e4e6eb;
+  --text-light: #9ca3af;
+  --border-color: #374151;
+  --background-color: #111827;
+  --background-alt: #1f2937;
+  --success-color: #10b981;
+  --success-hover: #059669;
+  --error-color: #ef4444;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
 body,
 html {
   margin: 0;
@@ -298,7 +315,13 @@ html {
   border-bottom-left-radius: 0.25rem;
   flex-grow: 1;
   box-shadow: var(--shadow-sm);
-  transition: box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+}
+
+:root.dark-mode .message.bot-message .message-content {
+  background-color: rgba(31, 41, 55, 0.95);
+  border-color: rgba(55, 65, 81, 0.9);
+  color: #f9fafb;
 }
 
 .message-content:hover {
@@ -638,4 +661,79 @@ html {
   max-width: 100%;
   border-radius: var(--radius-sm);
   margin: 0.5rem 0;
+}
+
+/* 다크모드 전환 애니메이션 */
+body,
+#chatbot-container,
+#chat-messages,
+#chat-input-area,
+#chat-actions-predefined,
+#api-key-section,
+input,
+textarea,
+button,
+.message,
+.message-content {
+  transition: background-color var(--transition-normal),
+    color var(--transition-normal),
+    border-color var(--transition-normal);
+}
+
+/* 테마 토글 버튼 스타일 */
+#theme-toggle-btn {
+  cursor: pointer;
+  margin-left: 15px;
+  font-size: 1.5em;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
+}
+
+#theme-toggle-btn:hover {
+  transform: scale(1.1) rotate(15deg);
+  opacity: 0.9;
+}
+
+/* 다크모드에서 마크다운 컨텐츠의 색상 조정 */
+:root.dark-mode .message.bot-message p h1,
+:root.dark-mode .message.bot-message p h2,
+:root.dark-mode .message.bot-message p h3,
+:root.dark-mode .message.bot-message p h4,
+:root.dark-mode .message.bot-message p h5,
+:root.dark-mode .message.bot-message p h6 {
+  color: #f3f4f6;
+}
+
+:root.dark-mode .message.bot-message p code {
+  background-color: rgba(30, 58, 138, 0.4);
+  color: #93c5fd;
+}
+
+:root.dark-mode #chat-actions-predefined {
+  background-color: rgba(17, 24, 39, 0.8);
+}
+
+/* 다크모드에서 채팅 메시지 영역 개선 */
+:root.dark-mode #chat-messages {
+  background-color: var(--background-color);
+}
+
+:root.dark-mode #chat-input-area {
+  background-color: rgba(31, 41, 55, 0.9);
+  border-color: rgba(55, 65, 81, 0.9);
+}
+
+:root.dark-mode .message.bot-message p blockquote {
+  color: #cbd5e1;
+  border-left-color: var(--primary-color);
+}
+
+:root.dark-mode .message.bot-message p th {
+  background-color: rgba(31, 41, 55, 0.8);
+  color: #f3f4f6;
+}
+
+/* 사용자 메시지 배경색 약간 어둡게 조정 */
+:root.dark-mode .user-message .message-content {
+  background-color: #5955e0;
+  background-image: linear-gradient(135deg, #5955e0, #7070e6);
 }

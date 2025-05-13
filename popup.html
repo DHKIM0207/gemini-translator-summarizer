@@ -32,6 +32,23 @@
             --transition-normal: 0.3s ease;
         }
 
+        :root.dark-mode {
+            --primary-color: #6366f1;
+            --primary-hover: #4f46e5;
+            --secondary-color: #1e1e2d;
+            --text-color: #e4e6eb;
+            --text-light: #9ca3af;
+            --border-color: #374151;
+            --background-color: #111827;
+            --background-alt: #1f2937;
+            --success-color: #10b981;
+            --success-hover: #059669;
+            --error-color: #ef4444;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.2), 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.2), 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+
         body {
             font-family: 'Noto Sans KR', system-ui, sans-serif;
             width: 380px;
@@ -282,6 +299,25 @@
         .icon-button .material-symbols-rounded {
             font-size: 1.5rem;
         }
+
+        .theme-toggle {
+            transition: transform var(--transition-fast);
+        }
+
+        .theme-toggle:hover {
+            transform: rotate(15deg);
+        }
+
+        /* 다크모드 전환 애니메이션 */
+        body,
+        input,
+        select,
+        button,
+        #result-container {
+            transition: background-color var(--transition-normal),
+                color var(--transition-normal),
+                border-color var(--transition-normal);
+        }
     </style>
 </head>
 
@@ -289,6 +325,10 @@
     <div class="container">
         <button class="icon-button" id="infoBtn" title="정보">
             <span class="material-symbols-rounded">info</span>
+        </button>
+
+        <button class="icon-button theme-toggle" id="themeToggle" title="테마 변경" style="left: 1rem; right: auto;">
+            <span class="material-symbols-rounded">dark_mode</span>
         </button>
 
         <div class="header">
