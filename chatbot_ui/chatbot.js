@@ -117,17 +117,9 @@ function initializeChatbot() {
     }
   });
 
-  // background.js 로부터 오는 스트리밍 응답 처리는 ChatSession을 사용하면서 불필요해짐.
-  // chrome.runtime.onMessage 리스너에서 GEMINI_STREAMING_RESPONSE 처리 부분은 삭제 또는 주석 처리.
-  // (단, 다른 타입의 메시지를 백그라운드에서 받는다면 해당 리스너는 유지)
   chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    // 이 리스너는 챗봇 내부의 Gemini API 직접 호출로 인해 GEMINI_STREAMING_RESPONSE 처리가 불필요.
-    // 다른 메시지 타입(예: 팝업과의 통신)이 있다면 그 부분은 유지.
-    // 현재 파일 구조상으로는 TRANSLATE_SELECTION_REQUEST_FROM_HOVER 외에는 특별히 background에서 직접 chatbot.js로 보낼 메시지가 없어보임.
-    // 해당 타입도 content.js를 통해 postMessage로 전달되는 것이 일반적임.
     if (request.type === "TRANSLATE_SELECTION_REQUEST_FROM_HOVER") {
-      // 이 메시지는 content.js에서 chatbot.html로 postMessage를 통해 전달되는 것이 더 적합.
-      // 현재 코드에서는 window.addEventListener("message", ...) 에서 처리 중.
+      // Handled by window.addEventListener("message", ...)
     }
     return true;
   });
@@ -141,7 +133,7 @@ function initializeGenAI() {
       console.error("Error initializing GoogleGenerativeAI:", error);
       apiKeyMsg.textContent = 'API 키 초기화 중 오류 발생. 키를 확인해주세요.';
       apiKeyMsg.style.color = '#ef4444';
-      currentApiKey = null; // 키가 유효하지 않음을 표시
+      currentApiKey = null;
       genAI = null;
     }
   } else {
@@ -157,24 +149,18 @@ function startNewChatSession(history = []) {
   }
   if (!genAI) {
     initializeGenAI();
-    if (!genAI) { // 초기화 실패 시
+    if (!genAI) {
       addMessageToUI("Gemini AI 초기화 실패. API 키를 확인해주세요.", false, true);
       return false;
     }
   }
 
   try {
-    // TODO: 사용자가 설정할 수 있는 model, safetySettings, generationConfig 등을 chatbotGlobalParams 등에서 가져오도록 확장 가능
     const modelInstance = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
     chatSession = modelInstance.startChat({
       history: history,
-      // generationConfig: { temperature: 0.7, ... }, // 필요시 설정
-      // safetySettings: [ ... ], // 필요시 설정
     });
     console.log("새로운 ChatSession이 시작되었습니다.");
-    // 새 대화 시작 시 기존 메시지 클리어 (선택적)
-    // clearChatMessages();
-    // addMessageToUI("새 대화가 시작되었습니다. 무엇을 도와드릴까요?", false);
     return true;
   } catch (error) {
     console.error("ChatSession 시작 중 오류:", error);
@@ -195,11 +181,10 @@ function saveApiKey() {
   chrome.storage.local.set({ 'geminiApiKey': apiKey }, () => {
     apiKeyMsg.textContent = 'API 키가 성공적으로 저장되었습니다.';
     apiKeyMsg.style.color = '#10b981';
-    initializeGenAI(); // 새 키로 GenAI 재초기화
-    if (startNewChatSession()) { // 새 키로 새 세션 시작
+    initializeGenAI();
+    if (startNewChatSession()) {
       setTimeout(() => {
         apiKeySection.classList.add('hidden');
-        // addMessageToUI('API 키가 설정되었습니다. 이제 질문하실 수 있습니다.', false); // startNewChatSession 성공 메시지로 대체 가능
       }, 1500);
     }
   });
@@ -226,30 +211,64 @@ function addMessageToUI(text, isUser = false, isError = false, imageUrl = null) 
   if (imageUrl) {
     const imageElement = document.createElement("img");
     imageElement.src = imageUrl;
-    imageElement.className = "message-image"; // 사용자 메시지 내 이미지 스타일
+    imageElement.className = "message-image";
     imageElement.alt = isUser ? "첨부 이미지" : "생성된 이미지";
     contentDiv.appendChild(imageElement);
   }
 
   const paragraph = document.createElement("p");
-  if (isUser || isError) { // 사용자 메시지 또는 에러 메시지는 텍스트 직접 표시
+  let messageTextContent = text;
+
+  if (isUser || isError) {
     paragraph.textContent = text;
-  } else { // 봇 메시지는 마크다운 처리
+  } else {
     try {
       paragraph.innerHTML = marked.parse(text);
     } catch (e) {
       console.error("Markdown 파싱 오류:", e);
-      paragraph.textContent = text; // 파싱 실패 시 일반 텍스트로
+      paragraph.textContent = text;
     }
   }
   contentDiv.appendChild(paragraph);
 
   messageDiv.appendChild(avatarDiv);
   messageDiv.appendChild(contentDiv);
-  chatMessages.appendChild(messageDiv);
 
+  if (!isUser && !isError) {
+    const copyButton = document.createElement("button");
+    copyButton.className = "copy-button";
+    copyButton.title = "내용 복사";
+    copyButton.innerHTML = `<span class="material-symbols-rounded">content_copy</span>`;
+
+    copyButton.addEventListener('click', () => {
+      const textToCopy = paragraph.textContent || messageTextContent;
+
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        const icon = copyButton.querySelector('.material-symbols-rounded');
+        const originalIcon = icon.textContent;
+        icon.textContent = 'done';
+        copyButton.title = "복사됨!";
+        copyButton.classList.add('copied');
+
+        setTimeout(() => {
+          icon.textContent = originalIcon;
+          copyButton.title = "내용 복사";
+          copyButton.classList.remove('copied');
+        }, 1500);
+      }).catch(err => {
+        console.error('클립보드 복사 실패:', err);
+        copyButton.title = "복사 실패";
+        setTimeout(() => {
+          copyButton.title = "내용 복사";
+        }, 1500);
+      });
+    });
+    messageDiv.appendChild(copyButton);
+  }
+
+  chatMessages.appendChild(messageDiv);
   chatMessages.scrollTop = chatMessages.scrollHeight;
-  return messageDiv; // 스트리밍 업데이트를 위해 div 반환
+  return messageDiv;
 }
 
 
@@ -268,7 +287,7 @@ async function getPageContentForChat() {
     };
     window.addEventListener("message", listener);
     window.parent.postMessage({ type: "GET_PAGE_CONTENT", requestId: requestId }, "*");
-    setTimeout(() => { // Timeout
+    setTimeout(() => {
       window.removeEventListener("message", listener);
       reject(new Error("페이지 내용 요청 시간 초과"));
     }, 10000);
@@ -284,13 +303,13 @@ async function getSelectedTextFromPage() {
         if (event.data.type === "SELECTED_TEXT_RESULT") {
           resolve(event.data.selectedText);
         } else {
-          resolve(""); // 오류 발생 시 빈 문자열 반환 또는 reject
+          resolve("");
         }
       }
     };
     window.addEventListener("message", listener);
     window.parent.postMessage({ type: "GET_SELECTED_TEXT", requestId: requestId }, "*");
-    setTimeout(() => { // Timeout
+    setTimeout(() => {
       window.removeEventListener("message", listener);
       reject(new Error("선택된 텍스트 요청 시간 초과"));
     }, 5000);
@@ -348,8 +367,6 @@ async function handleTranslateSelectedText(textToTranslate = null) {
       loader.classList.add('hidden');
       return;
     }
-    // 사용자 요청 메시지는 이미 addMessageToUI로 추가되었거나, 직접 입력 시 sendMessage에서 추가됨
-    // addMessageToUI(`선택한 텍스트 ("${selectedText.substring(0,30)}...") 번역을 요청합니다...`, true);
 
     const targetLanguage = "한국어";
     const prompt = `다음 텍스트를 ${targetLanguage}(으)로 번역해줘:\n\n"${selectedText}"`;
@@ -367,15 +384,18 @@ async function streamResponse(promptText, imageParts = null) {
   }
 
   const botMessageDiv = addMessageToUI("답변 생성 중...", false);
-  const paragraph = botMessageDiv.querySelector('.message-content p');
-  if (paragraph) paragraph.innerHTML = ""; // "답변 생성 중..." 텍스트 제거
+  const contentDiv = botMessageDiv.querySelector('.message-content');
+  const paragraph = contentDiv.querySelector('p');
+  const copyButton = botMessageDiv.querySelector('.copy-button');
+
+  if (paragraph) paragraph.innerHTML = "";
 
   try {
     const contentRequest = [];
     if (promptText) {
       contentRequest.push({ text: promptText });
     }
-    if (imageParts) { // imageParts는 이미 {inlineData: {data: ..., mimeType: ...}} 형식이어야 함
+    if (imageParts) {
       contentRequest.push(imageParts);
     }
 
@@ -390,26 +410,56 @@ async function streamResponse(promptText, imageParts = null) {
 
     for await (const chunk of result.stream) {
       if (chunk.candidates && chunk.candidates.length > 0) {
-        const chunkText = chunk.text(); // Gemini SDK 0.24.1 에서는 chunk.text() 사용
+        const chunkText = chunk.text();
         accumulatedText += chunkText;
         if (paragraph) {
           try {
             paragraph.innerHTML = marked.parse(accumulatedText);
           } catch (e) {
             console.error("Markdown 파싱 중 오류:", e);
-            paragraph.textContent = accumulatedText; // 파싱 실패 시 일반 텍스트
+            paragraph.textContent = accumulatedText;
           }
         }
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     }
-    // 히스토리는 ChatSession에 의해 자동으로 업데이트됨
+
+    if (copyButton) {
+      const newCopyButton = copyButton.cloneNode(true);
+      copyButton.parentNode.replaceChild(newCopyButton, copyButton);
+
+      newCopyButton.addEventListener('click', () => {
+        const finalParagraph = newCopyButton.closest('.message').querySelector('.message-content p');
+        const textToCopy = finalParagraph ? finalParagraph.textContent : accumulatedText;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const icon = newCopyButton.querySelector('.material-symbols-rounded');
+          const originalIcon = 'content_copy';
+          icon.textContent = 'done';
+          newCopyButton.title = "복사됨!";
+          newCopyButton.classList.add('copied');
+
+          setTimeout(() => {
+            icon.textContent = originalIcon;
+            newCopyButton.title = "내용 복사";
+            newCopyButton.classList.remove('copied');
+          }, 1500);
+        }).catch(err => {
+          console.error('클립보드 복사 실패:', err);
+          newCopyButton.title = "복사 실패";
+          setTimeout(() => {
+            newCopyButton.title = "내용 복사";
+          }, 1500);
+        });
+      });
+    }
+
   } catch (error) {
     console.error("Gemini API 스트리밍 오류 (ChatSession):", error);
     if (paragraph) {
       paragraph.innerHTML = `<span class="error-message">API 오류: ${error.message || '알 수 없는 오류'}</span>`;
+      if (copyButton) copyButton.remove();
     } else {
-      // 만약 botMessageDiv가 어떤 이유로든 생성되지 않았다면 (거의 발생하지 않음)
       addMessageToUI(`API 오류: ${error.message || '알 수 없는 오류'}`, false, true);
     }
   } finally {
@@ -422,15 +472,14 @@ function sendMessage() {
   const text = userInput.value.trim();
   if (!text && !attachedImage) return;
 
-  if (!chatSession && !startNewChatSession()) return; // 세션 시작 또는 API 키 확인
+  if (!chatSession && !startNewChatSession()) return;
 
-  // 사용자 메시지 UI에 추가
   if (text || attachedImage) {
     addMessageToUI(text, true, false, attachedImage ? attachedImage.data : null);
   }
 
   userInput.value = "";
-  userInput.style.height = 'auto'; // 입력창 높이 초기화
+  userInput.style.height = 'auto';
 
   let imageContentPart = null;
   if (attachedImage) {
@@ -446,15 +495,13 @@ function sendMessage() {
     };
   }
 
-  removeAttachedImage(); // UI에서 이미지 프리뷰 제거 및 attachedImage 변수 초기화
+  removeAttachedImage();
   loader.classList.remove('hidden');
 
-  // streamResponse 함수에 텍스트와 이미지 파트 전달
   streamResponse(text || (imageContentPart ? "이 이미지에 대해 설명해주세요." : ""), imageContentPart);
 }
 
 
-// --- 이미지 관련 함수들 (기존과 거의 동일) ---
 function handleImageUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -462,7 +509,7 @@ function handleImageUpload(event) {
     addMessageToUI("이미지 파일만 첨부할 수 있습니다.", false, true);
     return;
   }
-  const maxSize = 5 * 1024 * 1024; // 5MB
+  const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
     addMessageToUI("이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
     return;
@@ -495,7 +542,7 @@ function handlePasteImage(event) {
   for (const item of items) {
     if (item.type.indexOf('image') === 0) {
       const blob = item.getAsFile();
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       if (blob.size > maxSize) {
         addMessageToUI("붙여넣은 이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
         return;
@@ -517,7 +564,6 @@ function handlePasteImage(event) {
   }
 }
 
-// --- 기존 UI 헬퍼 함수들 ---
 function toggleApiKeySection() {
   apiKeySection.classList.toggle('hidden');
 }
@@ -529,7 +575,7 @@ function closeChatbot() {
 function adjustTextareaHeight() {
   userInput.style.height = 'auto';
   let newHeight = userInput.scrollHeight;
-  const maxHeight = 100; // CSS의 max-height와 동기화 필요
+  const maxHeight = 150;
   if (newHeight > maxHeight) {
     newHeight = maxHeight;
     userInput.style.overflowY = 'auto';
@@ -559,7 +605,6 @@ function toggleFullscreen() {
 
 function handleFullscreenError(error) {
   console.error("풀스크린 전환 중 오류:", error);
-  // 사용자에게 알림 (예: toast 메시지)
   const tempMsg = addMessageToUI("풀스크린 전환에 실패했습니다. (iframe allowfullscreen 속성 필요)", false, true);
   setTimeout(() => tempMsg.remove(), 3000);
 }
@@ -587,9 +632,7 @@ function toggleTheme() {
   chrome.storage.local.set({ theme: isDarkMode ? 'dark' : 'light' });
 }
 
-// 초기 메시지들을 지우는 함수 (새 대화 시작 시 호출 가능)
 function clearChatMessages() {
   chatMessages.innerHTML = '';
-  // 필요하다면 초기 안내 메시지 다시 추가
-  // addMessageToUI("안녕하세요! 무엇을 도와드릴까요? ...", false);
+  addMessageToUI("안녕하세요! 무엇을 도와드릴까요? 페이지 전체에 대해서는 '페이지 요약' 또는 '페이지 번역' 버튼을, 선택한 텍스트에 대해서는 '선택 영역 번역' 버튼을 사용하거나, 직접 메시지를 입력해주세요.", false);
 }

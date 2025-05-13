@@ -258,14 +258,18 @@ html {
   display: flex;
   gap: 0.75rem;
   align-items: flex-start;
-  padding: 1rem 1.25rem;
+  /* padding: 1rem 1.25rem; */
+  /* 패딩은 message-content로 이동하거나 유지 */
   border-radius: var(--radius-lg);
   max-width: 85%;
   line-height: 1.5;
   word-wrap: break-word;
   animation: messageAppear 0.3s ease;
-  box-shadow: var(--shadow-sm);
+  /* box-shadow: var(--shadow-sm); */
+  /* message-content로 이동 */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  /* 복사 버튼의 position: absolute 기준점 */
 }
 
 @keyframes messageAppear {
@@ -280,9 +284,10 @@ html {
   }
 }
 
-.message:hover {
+/* 메시지 호버 시 그림자 효과는 message-content에 적용 가능 */
+/* .message:hover {
   box-shadow: var(--shadow-md);
-}
+} */
 
 .message-avatar {
   width: 2rem;
@@ -294,10 +299,13 @@ html {
   background-color: var(--primary-color);
   color: white;
   flex-shrink: 0;
+  margin-top: 0.5rem;
+  /* 메시지 내용과 정렬되도록 약간의 상단 마진 */
 }
 
 .user-message .message-avatar {
   order: 1;
+  /* 사용자 메시지 아바타 오른쪽으로 */
   background-color: var(--primary-hover);
 }
 
@@ -310,12 +318,16 @@ html {
   backdrop-filter: blur(10px);
   border: 1px solid rgba(229, 231, 235, 0.5);
   color: var(--text-color);
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1.25rem;
+  /* 패딩 조정 */
   border-radius: var(--radius-lg);
   border-bottom-left-radius: 0.25rem;
+  /* 봇 메시지 꼬리 */
   flex-grow: 1;
   box-shadow: var(--shadow-sm);
   transition: box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease;
+  position: relative;
+  /* 내부 요소 정렬 기준 */
 }
 
 :root.dark-mode .message.bot-message .message-content {
@@ -333,8 +345,17 @@ html {
   background-image: linear-gradient(135deg, var(--primary-color), #818cf8);
   color: white;
   border-bottom-left-radius: var(--radius-lg);
+  /* 사용자 메시지 꼬리 반대 */
   border-bottom-right-radius: 0.25rem;
+  margin-left: auto;
+  /* 사용자 메시지 오른쪽 정렬 */
 }
+
+.user-message {
+  align-self: flex-end;
+  /* 사용자 메시지 컨테이너 오른쪽 정렬 */
+}
+
 
 .bot-message.error .message-content {
   background-color: rgba(254, 226, 226, 0.9);
@@ -348,12 +369,13 @@ html {
 }
 
 /* Markdown Styles for Bot Messages */
-.message.bot-message p h1,
-.message.bot-message p h2,
-.message.bot-message p h3,
-.message.bot-message p h4,
-.message.bot-message p h5,
-.message.bot-message p h6 {
+.message.bot-message .message-content h1,
+/* p 태그 제거 */
+.message.bot-message .message-content h2,
+.message.bot-message .message-content h3,
+.message.bot-message .message-content h4,
+.message.bot-message .message-content h5,
+.message.bot-message .message-content h6 {
   margin-top: 0.8em;
   margin-bottom: 0.4em;
   line-height: 1.3;
@@ -361,30 +383,34 @@ html {
   color: var(--text-color);
 }
 
-.message.bot-message p h1 {
+.message.bot-message .message-content h1 {
   font-size: 1.6em;
 }
 
-.message.bot-message p h2 {
+.message.bot-message .message-content h2 {
   font-size: 1.4em;
 }
 
-.message.bot-message p h3 {
+.message.bot-message .message-content h3 {
   font-size: 1.2em;
 }
 
-.message.bot-message p ul,
-.message.bot-message p ol {
+.message.bot-message .message-content ul,
+/* p 태그 제거 */
+.message.bot-message .message-content ol {
   padding-left: 1.5rem;
   margin-top: 0.5em;
   margin-bottom: 0.5em;
 }
 
-.message.bot-message p li {
+.message.bot-message .message-content li {
   margin-bottom: 0.3em;
 }
 
-.message.bot-message p code {
+/* p 태그 제거 */
+
+.message.bot-message .message-content code {
+  /* p 태그 제거 */
   background-color: rgba(224, 231, 255, 0.5);
   padding: 0.2em 0.4em;
   margin: 0;
@@ -394,7 +420,8 @@ html {
   color: #4f46e5;
 }
 
-.message.bot-message p pre {
+.message.bot-message .message-content pre {
+  /* p 태그 제거 */
   background-color: #2d3748;
   color: #e2e8f0;
   padding: 1em;
@@ -408,14 +435,17 @@ html {
   box-shadow: var(--shadow-sm);
 }
 
-.message.bot-message p pre code {
+.message.bot-message .message-content pre code {
   background-color: transparent;
   color: inherit;
   padding: 0;
   border-radius: 0;
 }
 
-.message.bot-message p blockquote {
+/* p 태그 제거 */
+
+.message.bot-message .message-content blockquote {
+  /* p 태그 제거 */
   border-left: 4px solid var(--primary-color);
   padding-left: 1em;
   margin-left: 0;
@@ -424,31 +454,40 @@ html {
   font-style: italic;
 }
 
-.message.bot-message p table {
+.message.bot-message .message-content table {
+  /* p 태그 제거 */
   border-collapse: collapse;
   width: 100%;
   margin: 1em 0;
   border-radius: var(--radius-sm);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  /* 테이블에도 그림자 추가 */
 }
 
-.message.bot-message p th,
-.message.bot-message p td {
+.message.bot-message .message-content th,
+/* p 태그 제거 */
+.message.bot-message .message-content td {
   border: 1px solid var(--border-color);
-  padding: 0.5em;
+  padding: 0.6em 0.8em;
+  /* 패딩 조정 */
   text-align: left;
 }
 
-.message.bot-message p th {
-  background-color: rgba(243, 244, 246, 0.8);
+.message.bot-message .message-content th {
+  /* p 태그 제거 */
+  background-color: rgba(243, 244, 246, 0.9);
+  /* 약간 더 진하게 */
   font-weight: 600;
 }
 
-.message.bot-message p hr {
+.message.bot-message .message-content hr {
+  /* p 태그 제거 */
   border: none;
   border-top: 1px solid var(--border-color);
   margin: 1.5em 0;
 }
+
 
 #chat-input-area {
   display: flex;
@@ -471,6 +510,7 @@ html {
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
   height: 45px;
   max-height: 150px;
+  /* CSS에서 최대 높이 제한 */
   box-shadow: var(--shadow-sm);
 }
 
@@ -647,17 +687,23 @@ html {
 }
 
 .user-message .message-image {
+  /* 사용자 메시지 내 이미지 */
   max-width: 200px;
+  /* 크기 제한 */
   border-radius: var(--radius-md);
   margin-top: 0.5rem;
+  /* 텍스트와의 간격 */
+  display: block;
+  /* 이미지 하단 여백 제거 */
 }
 
 .hidden-file-input {
   display: none;
 }
 
-/* 메시지 내의 이미지 */
-.message-content img {
+/* 메시지 내의 이미지 (봇이 생성한 이미지 등) */
+.message-content img:not(.message-image) {
+  /* 사용자 첨부 이미지는 제외 */
   max-width: 100%;
   border-radius: var(--radius-sm);
   margin: 0.5rem 0;
@@ -674,6 +720,7 @@ input,
 textarea,
 button,
 .message,
+/* .message 에도 transition 추가 */
 .message-content {
   transition: background-color var(--transition-normal),
     color var(--transition-normal),
@@ -694,16 +741,16 @@ button,
 }
 
 /* 다크모드에서 마크다운 컨텐츠의 색상 조정 */
-:root.dark-mode .message.bot-message p h1,
-:root.dark-mode .message.bot-message p h2,
-:root.dark-mode .message.bot-message p h3,
-:root.dark-mode .message.bot-message p h4,
-:root.dark-mode .message.bot-message p h5,
-:root.dark-mode .message.bot-message p h6 {
+:root.dark-mode .message.bot-message .message-content h1,
+:root.dark-mode .message.bot-message .message-content h2,
+:root.dark-mode .message.bot-message .message-content h3,
+:root.dark-mode .message.bot-message .message-content h4,
+:root.dark-mode .message.bot-message .message-content h5,
+:root.dark-mode .message.bot-message .message-content h6 {
   color: #f3f4f6;
 }
 
-:root.dark-mode .message.bot-message p code {
+:root.dark-mode .message.bot-message .message-content code {
   background-color: rgba(30, 58, 138, 0.4);
   color: #93c5fd;
 }
@@ -715,6 +762,7 @@ button,
 /* 다크모드에서 채팅 메시지 영역 개선 */
 :root.dark-mode #chat-messages {
   background-color: var(--background-color);
+  /* 채팅 메시지 영역 배경색 일치 */
 }
 
 :root.dark-mode #chat-input-area {
@@ -722,12 +770,12 @@ button,
   border-color: rgba(55, 65, 81, 0.9);
 }
 
-:root.dark-mode .message.bot-message p blockquote {
+:root.dark-mode .message.bot-message .message-content blockquote {
   color: #cbd5e1;
   border-left-color: var(--primary-color);
 }
 
-:root.dark-mode .message.bot-message p th {
+:root.dark-mode .message.bot-message .message-content th {
   background-color: rgba(31, 41, 55, 0.8);
   color: #f3f4f6;
 }
@@ -735,5 +783,74 @@ button,
 /* 사용자 메시지 배경색 약간 어둡게 조정 */
 :root.dark-mode .user-message .message-content {
   background-color: #5955e0;
+  /* 약간 더 어둡게 */
   background-image: linear-gradient(135deg, #5955e0, #7070e6);
+}
+
+/* 복사 버튼 스타일 (추가된 부분) */
+.copy-button {
+  position: absolute;
+  bottom: 8px;
+  right: -35px;
+  /* 메시지 박스 오른쪽 바깥으로 */
+  /* 안쪽으로 하려면:
+    bottom: 5px;
+    right: 5px;
+    */
+  background-color: var(--background-alt);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  /* 평소에는 숨김 */
+  transition: opacity 0.2s ease-in-out, background-color 0.2s ease, color 0.2s ease;
+  box-shadow: var(--shadow-sm);
+  color: var(--text-light);
+  z-index: 5;
+  /* 다른 요소 위에 오도록 */
+}
+
+/* 봇 메시지에 마우스 호버 시 복사 버튼 표시 */
+.message.bot-message:hover .copy-button {
+  opacity: 0.7;
+}
+
+.copy-button:hover {
+  opacity: 1;
+  background-color: var(--secondary-color);
+  color: var(--primary-color);
+}
+
+.copy-button .material-symbols-rounded {
+  font-size: 1rem;
+  /* 아이콘 크기 */
+}
+
+.copy-button.copied .material-symbols-rounded {
+  /* 아이콘 변경은 JS에서 직접 처리 */
+  color: var(--success-color);
+  /* 복사 성공 시 아이콘 색상 변경 */
+}
+
+/* 다크 모드 복사 버튼 */
+:root.dark-mode .copy-button {
+  background-color: var(--background-alt);
+  border-color: var(--border-color);
+  color: var(--text-light);
+}
+
+:root.dark-mode .copy-button:hover {
+  background-color: #374151;
+  /* 다크 모드 호버 배경색 */
+  color: var(--primary-color);
+}
+
+:root.dark-mode .copy-button.copied .material-symbols-rounded {
+  color: var(--success-color);
 }
