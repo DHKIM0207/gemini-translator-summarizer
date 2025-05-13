@@ -1,3 +1,8 @@
+// chatbot_ui/chatbot.js
+
+// GoogleGenerativeAI import 경로 수정
+import { GoogleGenerativeAI } from '../lib/google-generative-ai.esm.js';
+
 const settingsBtn = document.getElementById('settings-btn');
 const apiKeySection = document.getElementById('api-key-section');
 const apiKeyInput = document.getElementById('apiKeyInput');
@@ -10,19 +15,16 @@ const sendBtn = document.getElementById('sendBtn');
 const loader = document.getElementById('loader');
 const closeChatbotBtn = document.getElementById('close-chatbot-btn');
 
-// 풀스크린 관련 요소
 const fullscreenBtn = document.getElementById('fullscreen-btn');
 const fullscreenExitBtn = document.getElementById('fullscreen-exit-btn');
 const chatbotContainer = document.getElementById('chatbot-container');
 
-// 테마 토글 버튼
 const themeToggleBtn = document.getElementById('theme-toggle-btn');
 
 const summarizePageBtn = document.getElementById('summarizePageBtn');
 const translatePageBtn = document.getElementById('translatePageBtn');
 const translateSelectionBtn = document.getElementById('translateSelectionBtn');
 
-// 이미지 첨부 관련 요소
 const imageUploadBtn = document.getElementById('image-upload-btn');
 const imageFileInput = document.getElementById('image-file-input');
 const imagePreviewContainer = document.getElementById('image-preview-container');
@@ -30,109 +32,157 @@ const imagePreview = document.getElementById('image-preview');
 const removeImageBtn = document.getElementById('remove-image');
 
 let currentApiKey = null;
-// let currentPageContent = null; // 이제 각 핸들러에서 필요시 가져옴
-let activeStreamId = null;
-let attachedImage = null; // 첨부된 이미지를 저장할 변수
+let attachedImage = null;
+
+// Gemini AI SDK 관련 변수
+let genAI = null;
+let chatSession = null;
 
 // marked.js 옵션 설정
 marked.setOptions({
   gfm: true,
-  breaks: true, // \n을 <br>로 자동 변환하도록 설정
+  breaks: true,
 });
 
-// --- 초기화 ---
 document.addEventListener('DOMContentLoaded', initializeChatbot);
 
-// chatbot 초기화 함수
 function initializeChatbot() {
-  // 이전 API 키 로드
   chrome.storage.local.get(['geminiApiKey', 'theme'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
       currentApiKey = result.geminiApiKey;
+      initializeGenAI(); // API 키 로드 후 GenAI 초기화
+      startNewChatSession(); // API 키 있으면 새 세션 시작 시도
     }
 
-    // 테마 설정 로드 및 적용
     if (result.theme === 'dark') {
       document.documentElement.classList.add('dark-mode');
-      themeToggleBtn.textContent = 'light_mode'; // 다크모드에서는 해 아이콘
+      themeToggleBtn.textContent = 'light_mode';
     } else {
       document.documentElement.classList.remove('dark-mode');
-      themeToggleBtn.textContent = 'dark_mode'; // 라이트모드에서는 달 아이콘
+      themeToggleBtn.textContent = 'dark_mode';
     }
   });
 
-  // 이벤트 리스너 등록
   fullscreenBtn.addEventListener('click', toggleFullscreen);
   fullscreenExitBtn.addEventListener('click', toggleFullscreen);
   settingsBtn.addEventListener('click', toggleApiKeySection);
   saveApiKeyBtn.addEventListener('click', saveApiKey);
   closeChatbotBtn.addEventListener('click', closeChatbot);
-
-  // 테마 토글 버튼 이벤트 리스너
   themeToggleBtn.addEventListener('click', toggleTheme);
 
-  // 기능 버튼 이벤트 리스너
   summarizePageBtn.addEventListener('click', handleSummarizePage);
   translatePageBtn.addEventListener('click', handleTranslatePage);
   translateSelectionBtn.addEventListener('click', handleTranslateSelectedText);
 
-  // 이미지 버튼 이벤트 리스너
   imageUploadBtn.addEventListener('click', () => imageFileInput.click());
   imageFileInput.addEventListener('change', handleImageUpload);
   removeImageBtn.addEventListener('click', removeAttachedImage);
-
-  // 클립보드 붙여넣기 이벤트 리스너
   userInput.addEventListener('paste', handlePasteImage);
 
-  // 메시지 전송 버튼 클릭 이벤트
   sendBtn.addEventListener('click', () => {
-    const text = userInput.value.trim();
-    if (text || attachedImage) {
+    sendMessage();
+  });
+
+  userInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       sendMessage();
     }
   });
 
-  // 메시지 입력창 엔터 키 이벤트
-  userInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      const text = userInput.value.trim();
-      if (text || attachedImage) {
-        sendMessage();
-      }
-    }
-  });
-
-  // 텍스트 영역 자동 높이 조절
   userInput.addEventListener('input', adjustTextareaHeight);
 
-  // 풀스크린 변경 감지 이벤트 리스너
   document.addEventListener('fullscreenchange', updateFullscreenUI);
   document.addEventListener('webkitfullscreenchange', updateFullscreenUI);
   document.addEventListener('mozfullscreenchange', updateFullscreenUI);
   document.addEventListener('MSFullscreenChange', updateFullscreenUI);
 
-  // 메시지 수신 이벤트 리스너
-  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request.type === "TRANSLATE_SELECTION_REQUEST_FROM_HOVER") {
+  // content.js (부모 프레임) 로부터 오는 메시지 처리
+  window.addEventListener("message", (event) => {
+    if (event.source !== window.parent || !event.data) {
+      return;
+    }
+    const request = event.data;
+    if (request.type === "TRANSLATE_SELECTION_FROM_HOVER") {
+      loader.classList.remove('hidden');
       if (request.selectedText) {
         const snippet = request.selectedText.length > 50 ? request.selectedText.substring(0, 50) + "..." : request.selectedText;
-        addMessage(`[페이지 선택] "${snippet}" 번역 요청됨`, true);
-        handleTranslateSelectedText();
+        addMessageToUI(`[페이지 선택] "${snippet}" 번역 요청됨`, true);
+        handleTranslateSelectedText(request.selectedText); // 선택된 텍스트 직접 전달
       } else {
-        addMessage("호버 버튼에서 전달된 텍스트가 없습니다.", false, true);
+        addMessageToUI("호버 버튼에서 전달된 텍스트가 없습니다.", false, true);
+        loader.classList.add('hidden');
       }
-    } else if (request.type === "GEMINI_STREAMING_RESPONSE") {
-      // 백그라운드에서 온 스트리밍 응답 처리
-      console.log("Received streaming response from background:", request.streamId);
-      handleGeminiStreamingResponse(request);
     }
-    return true; // 비동기 응답 허용
+  });
+
+  // background.js 로부터 오는 스트리밍 응답 처리는 ChatSession을 사용하면서 불필요해짐.
+  // chrome.runtime.onMessage 리스너에서 GEMINI_STREAMING_RESPONSE 처리 부분은 삭제 또는 주석 처리.
+  // (단, 다른 타입의 메시지를 백그라운드에서 받는다면 해당 리스너는 유지)
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    // 이 리스너는 챗봇 내부의 Gemini API 직접 호출로 인해 GEMINI_STREAMING_RESPONSE 처리가 불필요.
+    // 다른 메시지 타입(예: 팝업과의 통신)이 있다면 그 부분은 유지.
+    // 현재 파일 구조상으로는 TRANSLATE_SELECTION_REQUEST_FROM_HOVER 외에는 특별히 background에서 직접 chatbot.js로 보낼 메시지가 없어보임.
+    // 해당 타입도 content.js를 통해 postMessage로 전달되는 것이 일반적임.
+    if (request.type === "TRANSLATE_SELECTION_REQUEST_FROM_HOVER") {
+      // 이 메시지는 content.js에서 chatbot.html로 postMessage를 통해 전달되는 것이 더 적합.
+      // 현재 코드에서는 window.addEventListener("message", ...) 에서 처리 중.
+    }
+    return true;
   });
 }
 
-// API 키 저장 함수
+function initializeGenAI() {
+  if (currentApiKey) {
+    try {
+      genAI = new GoogleGenerativeAI(currentApiKey);
+    } catch (error) {
+      console.error("Error initializing GoogleGenerativeAI:", error);
+      apiKeyMsg.textContent = 'API 키 초기화 중 오류 발생. 키를 확인해주세요.';
+      apiKeyMsg.style.color = '#ef4444';
+      currentApiKey = null; // 키가 유효하지 않음을 표시
+      genAI = null;
+    }
+  } else {
+    genAI = null;
+  }
+}
+
+function startNewChatSession(history = []) {
+  if (!currentApiKey) {
+    addMessageToUI("API 키가 설정되지 않았습니다. 설정에서 API 키를 먼저 저장해주세요.", false, true);
+    apiKeySection.classList.remove('hidden');
+    return false;
+  }
+  if (!genAI) {
+    initializeGenAI();
+    if (!genAI) { // 초기화 실패 시
+      addMessageToUI("Gemini AI 초기화 실패. API 키를 확인해주세요.", false, true);
+      return false;
+    }
+  }
+
+  try {
+    // TODO: 사용자가 설정할 수 있는 model, safetySettings, generationConfig 등을 chatbotGlobalParams 등에서 가져오도록 확장 가능
+    const modelInstance = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    chatSession = modelInstance.startChat({
+      history: history,
+      // generationConfig: { temperature: 0.7, ... }, // 필요시 설정
+      // safetySettings: [ ... ], // 필요시 설정
+    });
+    console.log("새로운 ChatSession이 시작되었습니다.");
+    // 새 대화 시작 시 기존 메시지 클리어 (선택적)
+    // clearChatMessages();
+    // addMessageToUI("새 대화가 시작되었습니다. 무엇을 도와드릴까요?", false);
+    return true;
+  } catch (error) {
+    console.error("ChatSession 시작 중 오류:", error);
+    addMessageToUI(`ChatSession 시작 오류: ${error.message}`, false, true);
+    return false;
+  }
+}
+
 function saveApiKey() {
   const apiKey = apiKeyInput.value.trim();
   if (!apiKey) {
@@ -142,97 +192,383 @@ function saveApiKey() {
   }
 
   currentApiKey = apiKey;
-  chrome.storage.local.set({ 'geminiApiKey': apiKey }, function () {
-    showApiKeySavedMessage();
+  chrome.storage.local.set({ 'geminiApiKey': apiKey }, () => {
+    apiKeyMsg.textContent = 'API 키가 성공적으로 저장되었습니다.';
+    apiKeyMsg.style.color = '#10b981';
+    initializeGenAI(); // 새 키로 GenAI 재초기화
+    if (startNewChatSession()) { // 새 키로 새 세션 시작
+      setTimeout(() => {
+        apiKeySection.classList.add('hidden');
+        // addMessageToUI('API 키가 설정되었습니다. 이제 질문하실 수 있습니다.', false); // startNewChatSession 성공 메시지로 대체 가능
+      }, 1500);
+    }
   });
 }
 
-// API 키 저장 성공 메시지
-function showApiKeySavedMessage() {
-  apiKeyMsg.textContent = 'API 키가 성공적으로 저장되었습니다.';
-  apiKeyMsg.style.color = '#10b981';
-  setTimeout(() => {
-    apiKeySection.classList.add('hidden');
-    addMessage('API 키가 설정되었습니다. 이제 질문하실 수 있습니다.', false);
-  }, 1500);
+function addMessageToUI(text, isUser = false, isError = false, imageUrl = null) {
+  const messageDiv = document.createElement("div");
+  messageDiv.className = isUser ? "message user-message" : "message bot-message";
+
+  const avatarDiv = document.createElement("div");
+  avatarDiv.className = "message-avatar";
+  const avatarIcon = document.createElement("span");
+  avatarIcon.className = "material-symbols-rounded";
+  avatarIcon.textContent = isUser ? "person" : "smart_toy";
+  avatarDiv.appendChild(avatarIcon);
+
+  const contentDiv = document.createElement("div");
+  contentDiv.className = "message-content";
+
+  if (isError) {
+    messageDiv.classList.add("error");
+  }
+
+  if (imageUrl) {
+    const imageElement = document.createElement("img");
+    imageElement.src = imageUrl;
+    imageElement.className = "message-image"; // 사용자 메시지 내 이미지 스타일
+    imageElement.alt = isUser ? "첨부 이미지" : "생성된 이미지";
+    contentDiv.appendChild(imageElement);
+  }
+
+  const paragraph = document.createElement("p");
+  if (isUser || isError) { // 사용자 메시지 또는 에러 메시지는 텍스트 직접 표시
+    paragraph.textContent = text;
+  } else { // 봇 메시지는 마크다운 처리
+    try {
+      paragraph.innerHTML = marked.parse(text);
+    } catch (e) {
+      console.error("Markdown 파싱 오류:", e);
+      paragraph.textContent = text; // 파싱 실패 시 일반 텍스트로
+    }
+  }
+  contentDiv.appendChild(paragraph);
+
+  messageDiv.appendChild(avatarDiv);
+  messageDiv.appendChild(contentDiv);
+  chatMessages.appendChild(messageDiv);
+
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  return messageDiv; // 스트리밍 업데이트를 위해 div 반환
 }
 
-// 에러 처리 함수
-function handleError(error) {
-  console.error('Error:', error);
-  addMessage(`오류가 발생했습니다: ${error.message || error}`, false, true);
-  loader.classList.add('hidden');
+
+async function getPageContentForChat() {
+  return new Promise((resolve, reject) => {
+    const requestId = `page_content_req_${Date.now()}`;
+    const listener = (event) => {
+      if (event.source === window.parent && event.data && event.data.requestId === requestId) {
+        window.removeEventListener("message", listener);
+        if (event.data.type === "PAGE_CONTENT_RESULT") {
+          resolve(event.data.content);
+        } else {
+          reject(new Error(event.data.error || "페이지 내용을 가져오지 못했습니다."));
+        }
+      }
+    };
+    window.addEventListener("message", listener);
+    window.parent.postMessage({ type: "GET_PAGE_CONTENT", requestId: requestId }, "*");
+    setTimeout(() => { // Timeout
+      window.removeEventListener("message", listener);
+      reject(new Error("페이지 내용 요청 시간 초과"));
+    }, 10000);
+  });
 }
 
-// 풀스크린 기능 구현
+async function getSelectedTextFromPage() {
+  return new Promise((resolve, reject) => {
+    const requestId = `selected_text_req_${Date.now()}`;
+    const listener = (event) => {
+      if (event.source === window.parent && event.data && event.data.requestId === requestId) {
+        window.removeEventListener("message", listener);
+        if (event.data.type === "SELECTED_TEXT_RESULT") {
+          resolve(event.data.selectedText);
+        } else {
+          resolve(""); // 오류 발생 시 빈 문자열 반환 또는 reject
+        }
+      }
+    };
+    window.addEventListener("message", listener);
+    window.parent.postMessage({ type: "GET_SELECTED_TEXT", requestId: requestId }, "*");
+    setTimeout(() => { // Timeout
+      window.removeEventListener("message", listener);
+      reject(new Error("선택된 텍스트 요청 시간 초과"));
+    }, 5000);
+  });
+}
+
+async function handleSummarizePage() {
+  if (!chatSession && !startNewChatSession()) return;
+  addMessageToUI("페이지 내용 요약을 요청합니다...", true);
+  loader.classList.remove('hidden');
+  try {
+    const pageContent = await getPageContentForChat();
+    if (!pageContent || pageContent.trim().length === 0) {
+      addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+      loader.classList.add('hidden');
+      return;
+    }
+    const prompt = `다음 텍스트를 한국어로 핵심 내용을 중심으로 간결하게 요약해줘:\n\n${pageContent}`;
+    await streamResponse(prompt);
+  } catch (error) {
+    addMessageToUI("페이지 요약 중 오류: " + error.message, false, true);
+    loader.classList.add('hidden');
+  }
+}
+
+async function handleTranslatePage() {
+  if (!chatSession && !startNewChatSession()) return;
+  addMessageToUI("페이지 전체 번역(영어를 한국어로)을 요청합니다...", true);
+  loader.classList.remove('hidden');
+  try {
+    const pageContent = await getPageContentForChat();
+    if (!pageContent || pageContent.trim().length === 0) {
+      addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+      loader.classList.add('hidden');
+      return;
+    }
+    const targetLanguage = "한국어";
+    const prompt = `다음 텍스트는 영어로 작성된 내용이야. 이 내용을 ${targetLanguage}(으)로 자연스럽게 번역해줘. HTML 태그나 코드는 번역 결과에 포함하지 마.:\n\n${pageContent}`;
+    await streamResponse(prompt);
+  } catch (error) {
+    addMessageToUI("페이지 번역 중 오류: " + error.message, false, true);
+    loader.classList.add('hidden');
+  }
+}
+
+async function handleTranslateSelectedText(textToTranslate = null) {
+  if (!chatSession && !startNewChatSession()) return;
+
+  loader.classList.remove('hidden');
+  try {
+    const selectedText = textToTranslate || await getSelectedTextFromPage();
+
+    if (!selectedText || selectedText.trim().length === 0) {
+      addMessageToUI("번역할 텍스트가 선택되지 않았습니다.", false, true);
+      loader.classList.add('hidden');
+      return;
+    }
+    // 사용자 요청 메시지는 이미 addMessageToUI로 추가되었거나, 직접 입력 시 sendMessage에서 추가됨
+    // addMessageToUI(`선택한 텍스트 ("${selectedText.substring(0,30)}...") 번역을 요청합니다...`, true);
+
+    const targetLanguage = "한국어";
+    const prompt = `다음 텍스트를 ${targetLanguage}(으)로 번역해줘:\n\n"${selectedText}"`;
+    await streamResponse(prompt);
+  } catch (error) {
+    addMessageToUI("선택 영역 번역 중 오류: " + error.message, false, true);
+    loader.classList.add('hidden');
+  }
+}
+
+async function streamResponse(promptText, imageParts = null) {
+  if (!chatSession && !startNewChatSession()) {
+    loader.classList.add('hidden');
+    return;
+  }
+
+  const botMessageDiv = addMessageToUI("답변 생성 중...", false);
+  const paragraph = botMessageDiv.querySelector('.message-content p');
+  if (paragraph) paragraph.innerHTML = ""; // "답변 생성 중..." 텍스트 제거
+
+  try {
+    const contentRequest = [];
+    if (promptText) {
+      contentRequest.push({ text: promptText });
+    }
+    if (imageParts) { // imageParts는 이미 {inlineData: {data: ..., mimeType: ...}} 형식이어야 함
+      contentRequest.push(imageParts);
+    }
+
+    if (contentRequest.length === 0) {
+      if (paragraph) paragraph.innerHTML = "요청 내용이 없습니다.";
+      loader.classList.add('hidden');
+      return;
+    }
+
+    const result = await chatSession.sendMessageStream(contentRequest);
+    let accumulatedText = "";
+
+    for await (const chunk of result.stream) {
+      if (chunk.candidates && chunk.candidates.length > 0) {
+        const chunkText = chunk.text(); // Gemini SDK 0.24.1 에서는 chunk.text() 사용
+        accumulatedText += chunkText;
+        if (paragraph) {
+          try {
+            paragraph.innerHTML = marked.parse(accumulatedText);
+          } catch (e) {
+            console.error("Markdown 파싱 중 오류:", e);
+            paragraph.textContent = accumulatedText; // 파싱 실패 시 일반 텍스트
+          }
+        }
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+    // 히스토리는 ChatSession에 의해 자동으로 업데이트됨
+  } catch (error) {
+    console.error("Gemini API 스트리밍 오류 (ChatSession):", error);
+    if (paragraph) {
+      paragraph.innerHTML = `<span class="error-message">API 오류: ${error.message || '알 수 없는 오류'}</span>`;
+    } else {
+      // 만약 botMessageDiv가 어떤 이유로든 생성되지 않았다면 (거의 발생하지 않음)
+      addMessageToUI(`API 오류: ${error.message || '알 수 없는 오류'}`, false, true);
+    }
+  } finally {
+    loader.classList.add('hidden');
+  }
+}
+
+
+function sendMessage() {
+  const text = userInput.value.trim();
+  if (!text && !attachedImage) return;
+
+  if (!chatSession && !startNewChatSession()) return; // 세션 시작 또는 API 키 확인
+
+  // 사용자 메시지 UI에 추가
+  if (text || attachedImage) {
+    addMessageToUI(text, true, false, attachedImage ? attachedImage.data : null);
+  }
+
+  userInput.value = "";
+  userInput.style.height = 'auto'; // 입력창 높이 초기화
+
+  let imageContentPart = null;
+  if (attachedImage) {
+    let base64Image = attachedImage.data;
+    if (base64Image.startsWith('data:image')) {
+      base64Image = base64Image.split(',')[1];
+    }
+    imageContentPart = {
+      inlineData: {
+        data: base64Image,
+        mimeType: attachedImage.type || "image/jpeg"
+      }
+    };
+  }
+
+  removeAttachedImage(); // UI에서 이미지 프리뷰 제거 및 attachedImage 변수 초기화
+  loader.classList.remove('hidden');
+
+  // streamResponse 함수에 텍스트와 이미지 파트 전달
+  streamResponse(text || (imageContentPart ? "이 이미지에 대해 설명해주세요." : ""), imageContentPart);
+}
+
+
+// --- 이미지 관련 함수들 (기존과 거의 동일) ---
+function handleImageUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('image/')) {
+    addMessageToUI("이미지 파일만 첨부할 수 있습니다.", false, true);
+    return;
+  }
+  const maxSize = 5 * 1024 * 1024; // 5MB
+  if (file.size > maxSize) {
+    addMessageToUI("이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    imagePreview.src = e.target.result;
+    imagePreviewContainer.classList.remove('hidden');
+    attachedImage = {
+      data: e.target.result,
+      name: file.name,
+      type: file.type
+    };
+  };
+  reader.onerror = function () {
+    addMessageToUI("이미지 파일을 읽는 중 오류가 발생했습니다.", false, true);
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeAttachedImage() {
+  attachedImage = null;
+  imagePreview.src = '';
+  imagePreviewContainer.classList.add('hidden');
+  imageFileInput.value = '';
+}
+
+function handlePasteImage(event) {
+  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+  for (const item of items) {
+    if (item.type.indexOf('image') === 0) {
+      const blob = item.getAsFile();
+      const maxSize = 5 * 1024 * 1024; // 5MB
+      if (blob.size > maxSize) {
+        addMessageToUI("붙여넣은 이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        imagePreview.src = e.target.result;
+        imagePreviewContainer.classList.remove('hidden');
+        attachedImage = {
+          data: e.target.result,
+          name: 'pasted-image.png',
+          type: blob.type
+        };
+      };
+      reader.readAsDataURL(blob);
+      event.preventDefault();
+      return;
+    }
+  }
+}
+
+// --- 기존 UI 헬퍼 함수들 ---
+function toggleApiKeySection() {
+  apiKeySection.classList.toggle('hidden');
+}
+
+function closeChatbot() {
+  window.parent.postMessage({ type: "CLOSE_CHATBOT" }, "*");
+}
+
+function adjustTextareaHeight() {
+  userInput.style.height = 'auto';
+  let newHeight = userInput.scrollHeight;
+  const maxHeight = 100; // CSS의 max-height와 동기화 필요
+  if (newHeight > maxHeight) {
+    newHeight = maxHeight;
+    userInput.style.overflowY = 'auto';
+  } else {
+    userInput.style.overflowY = 'hidden';
+  }
+  userInput.style.height = `${newHeight}px`;
+}
+
 function toggleFullscreen() {
   try {
     if (!isFullscreen()) {
-      // 풀스크린 모드로 전환
-      if (chatbotContainer.requestFullscreen) {
-        chatbotContainer.requestFullscreen().catch(error => handleFullscreenError(error));
-      } else if (chatbotContainer.mozRequestFullScreen) { // Firefox
-        chatbotContainer.mozRequestFullScreen().catch(error => handleFullscreenError(error));
-      } else if (chatbotContainer.webkitRequestFullscreen) { // Chrome, Safari, Opera
-        chatbotContainer.webkitRequestFullscreen().catch(error => handleFullscreenError(error));
-      } else if (chatbotContainer.msRequestFullscreen) { // IE/Edge
-        chatbotContainer.msRequestFullscreen().catch(error => handleFullscreenError(error));
-      }
+      if (chatbotContainer.requestFullscreen) chatbotContainer.requestFullscreen().catch(handleFullscreenError);
+      else if (chatbotContainer.mozRequestFullScreen) chatbotContainer.mozRequestFullScreen().catch(handleFullscreenError);
+      else if (chatbotContainer.webkitRequestFullscreen) chatbotContainer.webkitRequestFullscreen().catch(handleFullscreenError);
+      else if (chatbotContainer.msRequestFullscreen) chatbotContainer.msRequestFullscreen().catch(handleFullscreenError);
     } else {
-      // 풀스크린 모드 종료
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(error => handleFullscreenError(error));
-      } else if (document.mozCancelFullScreen) { // Firefox
-        document.mozCancelFullScreen().catch(error => handleFullscreenError(error));
-      } else if (document.webkitExitFullscreen) { // Chrome, Safari, Opera
-        document.webkitExitFullscreen().catch(error => handleFullscreenError(error));
-      } else if (document.msExitFullscreen) { // IE/Edge
-        document.msExitFullscreen().catch(error => handleFullscreenError(error));
-      }
+      if (document.exitFullscreen) document.exitFullscreen().catch(handleFullscreenError);
+      else if (document.mozCancelFullScreen) document.mozCancelFullScreen().catch(handleFullscreenError);
+      else if (document.webkitExitFullscreen) document.webkitExitFullscreen().catch(handleFullscreenError);
+      else if (document.msExitFullscreen) document.msExitFullscreen().catch(handleFullscreenError);
     }
   } catch (error) {
     handleFullscreenError(error);
   }
 }
 
-// 풀스크린 오류 처리 함수
 function handleFullscreenError(error) {
-  console.error("풀스크린 전환 중 오류 발생:", error);
-  // 풀스크린 권한 오류 시 사용자에게 알림
-  const errorMessage = "풀스크린 기능을 사용할 수 없습니다. iframe에 allowfullscreen 속성이 필요합니다.";
-
-  // 일시적으로 나타날 메시지 요소 생성
-  const messageElement = document.createElement('div');
-  messageElement.textContent = errorMessage;
-  messageElement.style.position = 'absolute';
-  messageElement.style.bottom = '10px';
-  messageElement.style.left = '50%';
-  messageElement.style.transform = 'translateX(-50%)';
-  messageElement.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-  messageElement.style.color = 'white';
-  messageElement.style.padding = '8px 16px';
-  messageElement.style.borderRadius = '4px';
-  messageElement.style.zIndex = '1000';
-
-  document.body.appendChild(messageElement);
-
-  // 3초 후 메시지 제거
-  setTimeout(() => {
-    document.body.removeChild(messageElement);
-  }, 3000);
+  console.error("풀스크린 전환 중 오류:", error);
+  // 사용자에게 알림 (예: toast 메시지)
+  const tempMsg = addMessageToUI("풀스크린 전환에 실패했습니다. (iframe allowfullscreen 속성 필요)", false, true);
+  setTimeout(() => tempMsg.remove(), 3000);
 }
 
-// 풀스크린 상태 확인 함수
+
 function isFullscreen() {
-  return !!(
-    document.fullscreenElement ||
-    document.webkitFullscreenElement ||
-    document.mozFullScreenElement ||
-    document.msFullscreenElement
-  );
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
 }
 
-// 풀스크린 상태 변경 시 UI 업데이트
 function updateFullscreenUI() {
   if (isFullscreen()) {
     fullscreenBtn.classList.add('hidden');
@@ -245,574 +581,15 @@ function updateFullscreenUI() {
   }
 }
 
-// --- 함수 ---
-function addMessage(text, isUser = false, isError = false) {
-  const messageDiv = document.createElement("div");
-  messageDiv.className = isUser ? "message user-message" : "message bot-message";
-
-  // 아바타 추가
-  const avatarDiv = document.createElement("div");
-  avatarDiv.className = "message-avatar";
-  const avatarIcon = document.createElement("span");
-  avatarIcon.className = "material-symbols-rounded";
-  avatarIcon.textContent = isUser ? "person" : "smart_toy";
-  avatarDiv.appendChild(avatarIcon);
-
-  // 메시지 내용 컨테이너
-  const contentDiv = document.createElement("div");
-  contentDiv.className = "message-content";
-
-  if (isError) {
-    messageDiv.classList.add("error");
-  }
-
-  const paragraph = document.createElement("p");
-
-  if (isUser) {
-    paragraph.textContent = text;
-  } else {
-    // 봇 메시지는 마크다운 지원
-    paragraph.innerHTML = marked.parse(text);
-  }
-
-  contentDiv.appendChild(paragraph);
-  messageDiv.appendChild(avatarDiv);
-  messageDiv.appendChild(contentDiv);
-  chatMessages.appendChild(messageDiv);
-
-  // 스크롤을 맨 아래로 이동
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-  return messageDiv;
-}
-
-let pageContentRequestId = 0;
-
-async function getPageContentForChat() {
-  return new Promise((resolve, reject) => {
-    const currentRequestId = `page_${++pageContentRequestId}`;
-    window.parent.postMessage({ type: "GET_PAGE_CONTENT", requestId: currentRequestId }, "*");
-    const listener = (event) => {
-      if (event.source === window.parent && event.data && event.data.requestId === currentRequestId) {
-        window.removeEventListener("message", listener);
-        if (event.data.type === "PAGE_CONTENT_RESULT" && typeof event.data.content === 'string') {
-          resolve(event.data.content);
-        } else {
-          reject(new Error(event.data.error || "페이지 내용을 가져오지 못했습니다."));
-        }
-      }
-    };
-    window.addEventListener("message", listener);
-    setTimeout(() => {
-      window.removeEventListener("message", listener);
-      reject(new Error("페이지 내용 요청 시간 초과"));
-    }, 10000);
-  });
-}
-
-async function getSelectedTextFromPage() {
-  return new Promise((resolve, reject) => {
-    const currentRequestId = `selection_${++pageContentRequestId}`;
-    window.parent.postMessage({ type: "GET_SELECTED_TEXT", requestId: currentRequestId }, "*");
-    const listener = (event) => {
-      if (event.source === window.parent && event.data && event.data.requestId === currentRequestId) {
-        window.removeEventListener("message", listener);
-        if (event.data.type === "SELECTED_TEXT_RESULT" && typeof event.data.selectedText === 'string') {
-          resolve(event.data.selectedText);
-        } else {
-          // 선택된 텍스트가 없는 경우에도 오류 대신 빈 문자열 반환 가능
-          resolve(""); // 또는 reject(new Error(event.data.error || "선택된 텍스트를 가져오지 못했습니다."));
-        }
-      }
-    };
-    window.addEventListener("message", listener);
-    setTimeout(() => {
-      window.removeEventListener("message", listener);
-      reject(new Error("선택된 텍스트 요청 시간 초과"));
-    }, 5000);
-  });
-}
-
-async function handleSummarizePage() {
-  if (!currentApiKey) {
-    addMessage("Gemini API 키가 설정되지 않았습니다.", "bot", true);
-    apiKeySection.classList.remove('hidden');
-    return;
-  }
-  addMessage("페이지 내용 요약을 요청합니다...", true);
-  loader.classList.remove('hidden');
-  try {
-    const pageContent = await getPageContentForChat();
-    if (!pageContent || pageContent.trim().length === 0) {
-      addMessage("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", "bot", true);
-      loader.classList.add('hidden');
-      return;
-    }
-    const prompt = `다음 텍스트를 한국어로 핵심 내용을 중심으로 간결하게 요약해줘:\n\n${pageContent}`;
-    initiateGeminiRequest(prompt);
-  } catch (error) {
-    addMessage("페이지 요약 중 오류: " + error.message, "bot", true);
-    loader.classList.add('hidden');
-  }
-}
-
-async function handleTranslatePage() {
-  if (!currentApiKey) {
-    addMessage("Gemini API 키가 설정되지 않았습니다.", "bot", true);
-    apiKeySection.classList.remove('hidden');
-    return;
-  }
-  addMessage("페이지 전체 번역을 요청합니다 (영어를 한국어로)...", true);
-  loader.classList.remove('hidden');
-  try {
-    const pageContent = await getPageContentForChat();
-    if (!pageContent || pageContent.trim().length === 0) {
-      addMessage("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", "bot", true);
-      loader.classList.add('hidden');
-      return;
-    }
-    const targetLanguage = "한국어";
-    const prompt = `다음 텍스트는 영어로 작성된 내용이야. 이 내용을 ${targetLanguage}(으)로 자연스럽게 번역해줘. HTML 태그나 코드는 번역 결과에 포함하지 마.:\n\n${pageContent}`;
-    addMessage(`페이지의 영어 내용을 ${targetLanguage}(으)로 번역합니다.`, "bot");
-    initiateGeminiRequest(prompt);
-  } catch (error) {
-    addMessage("페이지 번역 중 오류: " + error.message, "bot", true);
-    loader.classList.add('hidden');
-  }
-}
-
-// 선택 영역 번역 처리 함수
-async function handleTranslateSelectedText() {
-  if (!currentApiKey) {
-    addMessage("API 키가 설정되지 않았습니다. 설정 버튼을 클릭하여 API 키를 설정해주세요.", false, true);
-    apiKeySection.classList.remove('hidden');
-    return;
-  }
-
-  loader.classList.remove('hidden');
-  try {
-    const selectedText = await getSelectedTextFromPage();
-
-    if (!selectedText || selectedText.trim().length === 0) {
-      addMessage("번역할 텍스트가 선택되지 않았습니다. 웹페이지에서 텍스트를 선택한 후 다시 시도해주세요.", false, true);
-      loader.classList.add('hidden');
-      return;
-    }
-
-    addMessage(`선택한 텍스트 번역을 요청합니다...`, true);
-
-    const targetLanguage = "한국어";
-    const prompt = `다음 텍스트를 ${targetLanguage}(으)로 번역해줘:\n\n"${selectedText}"`;
-    const snippet = selectedText.length > 50 ? selectedText.substring(0, 50) + "..." : selectedText;
-
-    initiateGeminiRequest(prompt, true, selectedText);
-  } catch (error) {
-    addMessage("선택 영역 요청/번역 중 오류: " + error.message, false, true);
-    loader.classList.add('hidden');
-  }
-}
-
-async function handleDirectUserInput(text) {
-  if (!text) return;
-  if (!currentApiKey) {
-    addMessage("API 키가 설정되지 않았습니다. 설정 버튼을 클릭하여 API 키를 설정해주세요.", false, true);
-    return;
-  }
-  addMessage(text, true);
-  userInput.value = "";
-  userInput.style.height = 'auto';
-  loader.classList.remove('hidden');
-  const prompt = text;
-  addMessage("일반적인 질문으로 처리합니다...", "bot");
-  initiateGeminiRequest(prompt);
-}
-
-// 이미지 요청 처리 함수
-async function handleImageRequest(text, imageData) {
-  if (!currentApiKey) {
-    addMessage("API 키가 설정되지 않았습니다. 설정 버튼을 클릭하여 API 키를 설정해주세요.", false, true);
-    return;
-  }
-
-  loader.classList.remove('hidden');
-  addMessage("이미지 분석 중...", false);
-  initiateGeminiRequest(text, false, "", imageData);
-}
-
-function initiateGeminiRequest(prompt, isTranslation = false, selectedText = "", imageData = null) {
-  if (!currentApiKey) {
-    addMessage("API 키가 설정되지 않았습니다. 설정 버튼을 클릭하여 API 키를 설정해주세요.", false, true);
-    return;
-  }
-
-  activeStreamId = `stream_${Date.now()}`;
-  const initialBotMessageDiv = addMessage("답변 생성 중...", false);
-
-  // 메시지 요소에 스트림 ID 설정
-  initialBotMessageDiv.setAttribute('data-stream-id', activeStreamId);
-
-  // 이미지가 있는 경우와 없는 경우 분리
-  if (imageData) {
-    chrome.runtime.sendMessage({
-      type: "GEMINI_CHAT_WITH_IMAGE_REQUEST",
-      apiKey: currentApiKey,
-      prompt: prompt,
-      imageData: imageData.data,
-      streamId: activeStreamId
-    });
-  } else {
-    chrome.runtime.sendMessage({
-      type: "GEMINI_CHAT_REQUEST",
-      apiKey: currentApiKey,
-      prompt: prompt,
-      streamId: activeStreamId
-    });
-  }
-}
-
-window.addEventListener("message", (event) => {
-  if (event.source !== window.parent || !event.data) {
-    return;
-  }
-  const request = event.data;
-
-  // 호버 버튼으로부터 온 번역 요청 처리
-  if (request.type === "TRANSLATE_SELECTION_FROM_HOVER") {
-    console.log("Received TRANSLATE_SELECTION_FROM_HOVER in chatbot.js");
-    loader.classList.remove('hidden'); // 로더 시작
-    if (request.selectedText) {
-      // 사용자 입력 표시 (호버 버튼 클릭)
-      const snippet = request.selectedText.length > 50 ? request.selectedText.substring(0, 50) + "..." : request.selectedText;
-      addMessage(`[페이지 선택] "${snippet}" 번역 요청됨`, true);
-      handleTranslateSelectedText();
-    } else {
-      addMessage("호버 버튼에서 전달된 텍스트가 없습니다.", false, true);
-      loader.classList.add('hidden');
-    }
-    return; // 이 메시지 처리는 여기서 종료
-  }
-
-  // 스트리밍 데이터 처리 (수정된 부분)
-  if (request.type === "GEMINI_STREAMING_RESPONSE") {
-    if (request.streamId !== activeStreamId) {
-      return; // 활성화된 스트림 ID와 다르면 무시
-    }
-
-    loader.classList.add('hidden');
-    const messageElement = document.querySelector(`.message.bot-message[data-stream-id="${request.streamId}"]`);
-
-    if (!messageElement) {
-      console.error("메시지 요소를 찾을 수 없습니다:", request.streamId);
-      return;
-    }
-
-    const paragraph = messageElement.querySelector('.message-content p');
-
-    if (!paragraph) {
-      console.error("메시지 요소 내 단락을 찾을 수 없습니다");
-      return;
-    }
-
-    // 오류 처리
-    if (request.error) {
-      messageElement.classList.add('error');
-      paragraph.innerHTML = `API 오류: ${request.error.replace(/\n/g, '<br>')}`;
-      activeStreamId = null;
-      return;
-    }
-
-    // 시작할 때 "답변 생성 중..." 텍스트 지우기
-    if (paragraph.textContent === "답변 생성 중...") {
-      paragraph._streamingText = "";
-    } else if (!paragraph._streamingText) {
-      paragraph._streamingText = "";
-    }
-
-    // 새 텍스트 추가
-    if (request.text) {
-      paragraph._streamingText += request.text;
-
-      try {
-        paragraph.innerHTML = marked.parse(paragraph._streamingText);
-      } catch (e) {
-        console.error("Markdown 파싱 오류:", e);
-        paragraph.textContent = paragraph._streamingText;
-      }
-
-      // 스크롤 최신 상태로 유지
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
-
-    // 스트림 완료 처리
-    if (request.done) {
-      if (paragraph._streamingText) {
-        try {
-          paragraph.innerHTML = marked.parse(paragraph._streamingText);
-        } catch (e) {
-          console.error("최종 Markdown 파싱 오류:", e);
-          paragraph.textContent = paragraph._streamingText;
-        }
-      }
-      delete paragraph._streamingText;
-      activeStreamId = null;
-    }
-  }
-});
-
-// toggleApiKeySection 함수 정의
-function toggleApiKeySection() {
-  apiKeySection.classList.toggle('hidden');
-}
-
-// closeChatbot 함수 정의 (초기화 함수에서 호출되지만 정의되지 않음)
-function closeChatbot() {
-  window.parent.postMessage({ type: "CLOSE_CHATBOT" }, "*");
-}
-
-// adjustTextareaHeight 함수 정의 (초기화 함수에서 호출되지만 정의되지 않음)
-function adjustTextareaHeight() {
-  userInput.style.height = 'auto';
-  let newHeight = userInput.scrollHeight;
-  const maxHeight = 100;
-  if (newHeight > maxHeight) {
-    newHeight = maxHeight;
-    userInput.style.overflowY = 'auto';
-  } else {
-    userInput.style.overflowY = 'hidden';
-  }
-  userInput.style.height = `${newHeight}px`;
-}
-
-// 스트리밍 응답 처리
-async function handleGeminiStreamingResponse(response, responseMessageDiv = null) {
-  try {
-    const { text, done, streamId, error } = response;
-
-    // 오류 처리
-    if (error) {
-      console.error("API Error:", error);
-      addMessage(`오류가 발생했습니다: ${error}`, false, true);
-      loader.classList.add('hidden');
-      return;
-    }
-
-    // 활성 스트림 ID가 다르면 응답 무시
-    if (streamId !== activeStreamId) {
-      console.log("Ignoring outdated stream response", streamId, activeStreamId);
-      return;
-    }
-
-    // responseMessageDiv가 없으면 찾거나 새로 생성
-    if (!responseMessageDiv) {
-      responseMessageDiv = document.querySelector(`.message.bot-message[data-stream-id="${streamId}"]`);
-      if (!responseMessageDiv) {
-        // 찾을 수 없으면 새로 생성
-        responseMessageDiv = addMessage("", false);
-        responseMessageDiv.setAttribute('data-stream-id', streamId);
-      }
-    }
-
-    // 메시지 내용 업데이트
-    const contentDiv = responseMessageDiv.querySelector('.message-content');
-    const paragraph = contentDiv.querySelector('p');
-
-    // 스트리밍 시작될 때, 기본 "답변 생성 중..." 메시지 지우기
-    if (paragraph.textContent === "답변 생성 중...") {
-      paragraph.textContent = "";
-    }
-
-    // 마크다운 파싱
-    if (text) {
-      const currentText = paragraph.innerHTML;
-      try {
-        paragraph.innerHTML = marked.parse(currentText + text);
-      } catch (e) {
-        console.error("Markdown parsing error:", e);
-        paragraph.innerHTML = currentText + text;
-      }
-    }
-
-    // 스트리밍 완료 시 로더 숨기기
-    if (done) {
-      loader.classList.add('hidden');
-      activeStreamId = null;
-    }
-
-    // 스크롤을 항상 최신 상태로 유지
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  } catch (error) {
-    console.error('Streaming error:', error);
-    if (!responseMessageDiv) {
-      addMessage('응답을 처리하는 중 오류가 발생했습니다: ' + error.message, false, true);
-    } else {
-      // 기존 메시지를 오류 메시지로 변경
-      responseMessageDiv.classList.add('error');
-      const contentDiv = responseMessageDiv.querySelector('.message-content');
-      const paragraph = contentDiv.querySelector('p');
-      paragraph.textContent = '응답을 처리하는 중 오류가 발생했습니다: ' + error.message;
-    }
-  } finally {
-    loader.classList.add('hidden');
-  }
-}
-
-// 이미지 업로드 처리 함수
-function handleImageUpload(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  // 이미지 파일인지 확인
-  if (!file.type.startsWith('image/')) {
-    addMessage("이미지 파일만 첨부할 수 있습니다.", false, true);
-    return;
-  }
-
-  // 파일 크기 제한 (예: 5MB)
-  const maxSize = 5 * 1024 * 1024; // 5MB
-  if (file.size > maxSize) {
-    addMessage("이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
-    return;
-  }
-
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    // 이미지 미리보기 설정
-    imagePreview.src = e.target.result;
-    imagePreviewContainer.classList.remove('hidden');
-
-    // 이미지 데이터 저장
-    attachedImage = {
-      data: e.target.result,
-      name: file.name,
-      type: file.type
-    };
-  };
-  reader.onerror = function () {
-    addMessage("이미지 파일을 읽는 중 오류가 발생했습니다.", false, true);
-  };
-  reader.readAsDataURL(file);
-}
-
-// 첨부된 이미지 제거 함수
-function removeAttachedImage() {
-  attachedImage = null;
-  imagePreview.src = '';
-  imagePreviewContainer.classList.add('hidden');
-  imageFileInput.value = ''; // 파일 입력 초기화
-}
-
-// 클립보드 이미지 붙여넣기 처리 함수
-function handlePasteImage(event) {
-  const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-
-  for (const item of items) {
-    if (item.type.indexOf('image') === 0) {
-      const blob = item.getAsFile();
-
-      // 파일 크기 제한 (예: 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
-      if (blob.size > maxSize) {
-        addMessage("이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        // 이미지 미리보기 설정
-        imagePreview.src = e.target.result;
-        imagePreviewContainer.classList.remove('hidden');
-
-        // 이미지 데이터 저장
-        attachedImage = {
-          data: e.target.result,
-          name: 'pasted-image.png',
-          type: blob.type
-        };
-      };
-      reader.readAsDataURL(blob);
-
-      // 텍스트 붙여넣기 기본 동작 방지
-      event.preventDefault();
-      return;
-    }
-  }
-}
-
-// 메시지 전송 함수
-function sendMessage() {
-  const text = userInput.value.trim();
-
-  // 텍스트나 이미지가 있을 때만 처리
-  if (!text && !attachedImage) return;
-
-  // 메시지가 비어있지 않으면 사용자 메시지 추가
-  if (text) {
-    addMessage(text, true);
-  }
-
-  // 이미지가 첨부되어 있으면 이미지 메시지 추가
-  if (attachedImage) {
-    // 이미지를 포함한 메시지 생성
-    const messageDiv = document.createElement("div");
-    messageDiv.className = "message user-message";
-
-    // 아바타 추가
-    const avatarDiv = document.createElement("div");
-    avatarDiv.className = "message-avatar";
-    const avatarIcon = document.createElement("span");
-    avatarIcon.className = "material-symbols-rounded";
-    avatarIcon.textContent = "person";
-    avatarDiv.appendChild(avatarIcon);
-
-    // 메시지 내용 컨테이너
-    const contentDiv = document.createElement("div");
-    contentDiv.className = "message-content";
-
-    // 텍스트 메시지가 있으면 추가
-    if (text) {
-      const paragraph = document.createElement("p");
-      paragraph.textContent = text;
-      contentDiv.appendChild(paragraph);
-    }
-
-    // 이미지 추가
-    const imageElement = document.createElement("img");
-    imageElement.src = attachedImage.data;
-    imageElement.className = "message-image";
-    imageElement.alt = "첨부된 이미지";
-    contentDiv.appendChild(imageElement);
-
-    messageDiv.appendChild(avatarDiv);
-    messageDiv.appendChild(contentDiv);
-    chatMessages.appendChild(messageDiv);
-
-    // 스크롤을 맨 아래로 이동
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-  }
-
-  // 입력 필드 초기화
-  userInput.value = "";
-  userInput.style.height = 'auto';
-
-  // 이미지 첨부 초기화와 Gemini API 요청
-  const tempAttachedImage = attachedImage; // 임시 변수에 저장
-  removeAttachedImage();
-
-  // Gemini API 요청
-  if (text) {
-    handleDirectUserInput(text);
-  } else if (tempAttachedImage) {
-    // 이미지만 있는 경우 이미지 API 요청
-    handleImageRequest("이 이미지에 대해 설명해주세요.", tempAttachedImage);
-  }
-}
-
-// 테마 토글 함수
 function toggleTheme() {
   const isDarkMode = document.documentElement.classList.toggle('dark-mode');
-
-  // 아이콘 변경
   themeToggleBtn.textContent = isDarkMode ? 'light_mode' : 'dark_mode';
-
-  // 설정 저장
   chrome.storage.local.set({ theme: isDarkMode ? 'dark' : 'light' });
+}
+
+// 초기 메시지들을 지우는 함수 (새 대화 시작 시 호출 가능)
+function clearChatMessages() {
+  chatMessages.innerHTML = '';
+  // 필요하다면 초기 안내 메시지 다시 추가
+  // addMessageToUI("안녕하세요! 무엇을 도와드릴까요? ...", false);
 }
