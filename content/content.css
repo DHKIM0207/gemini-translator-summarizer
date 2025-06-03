@@ -55,8 +55,8 @@
   color: white;
   border: none;
   border-radius: 50%; /* 원형 버튼 */
-  width: 36px;   /* 버튼 크기 */
-  height: 36px;  /* 버튼 크기 */
+  width: 42px;   /* 버튼 크기 증가 */
+  height: 42px;  /* 버튼 크기 증가 */
   padding: 0; /* 내부 여백 없음 */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
   cursor: pointer;

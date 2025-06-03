@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PDF 뷰어 - Gemini AI 도우미</title>
+  <link rel="stylesheet" href="viewer.css">
+  <link rel="stylesheet" href="pdf_viewer.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+</head>
+<body>
+  <div id="pdf-container">
+    <div id="pdf-header">
+      <div class="header-left">
+        <button id="prev-page" title="이전 페이지">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+        <span id="page-info">
+          <input type="number" id="page-num" min="1" value="1">
+          <span> / </span>
+          <span id="page-count">0</span>
+        </span>
+        <button id="next-page" title="다음 페이지">
+          <span class="material-symbols-rounded">chevron_right</span>
+        </button>
+      </div>
+      
+      <div class="header-center">
+        <span id="pdf-title">PDF 문서</span>
+      </div>
+      
+      <div class="header-right">
+        <button id="zoom-out" title="축소">
+          <span class="material-symbols-rounded">zoom_out</span>
+        </button>
+        <span id="zoom-level">100%</span>
+        <button id="zoom-in" title="확대">
+          <span class="material-symbols-rounded">zoom_in</span>
+        </button>
+        <button id="fit-page" title="페이지 맞춤">
+          <span class="material-symbols-rounded">fit_screen</span>
+        </button>
+      </div>
+    </div>
+    
+    <div id="pdf-viewer">
+      <div id="pdf-render-container">
+        <canvas id="pdf-canvas"></canvas>
+        <div id="text-layer" class="textLayer"></div>
+      </div>
+    </div>
+    
+    <div id="loading-indicator" class="hidden">
+      <div class="spinner"></div>
+      <p>PDF 로딩 중...</p>
+    </div>
+    
+    <div id="error-message" class="hidden">
+      <span class="material-symbols-rounded">error</span>
+      <p id="error-text">PDF를 불러올 수 없습니다.</p>
+    </div>
+  </div>
+
+  <!-- FAB 버튼 (채팅) -->
+  <div id="gemini-fab">
+    <img src="https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/chat_bubble/default/24px.svg" alt="Chat">
+  </div>
+
+  <script src="../lib/pdf.min.js"></script>
+  <script src="viewer.js"></script>
+</body>
+</html>

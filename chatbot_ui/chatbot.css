@@ -20,6 +20,8 @@
   --radius-lg: 0.75rem;
   --transition-fast: 0.15s ease;
   --transition-normal: 0.3s ease;
+  --chat-font-family: 'Noto Sans KR', 'Segoe UI', system-ui, sans-serif;
+  --chat-font-size: 14px;
 }
 
 :root.dark-mode {
@@ -126,10 +128,12 @@ html {
 }
 
 #api-key-section {
-  padding: 1.25rem;
+  padding: 1rem;
   background-color: var(--background-alt);
   border-bottom: 1px solid var(--border-color);
   animation: fadeIn var(--transition-normal);
+  max-height: 80vh;
+  overflow-y: auto;
 }
 
 #api-key-section.hidden {
@@ -153,6 +157,7 @@ html {
   box-sizing: border-box;
   font-family: 'Noto Sans KR', sans-serif;
   background-color: var(--background-color);
+  color: var(--text-color);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
 }
 
@@ -239,6 +244,8 @@ html {
   flex-direction: column;
   gap: 1rem;
   scroll-behavior: smooth;
+  font-family: var(--chat-font-family);
+  font-size: var(--chat-font-size);
 }
 
 #chat-messages::-webkit-scrollbar {
@@ -319,7 +326,8 @@ html {
   border: 1px solid rgba(229, 231, 235, 0.5);
   color: var(--text-color);
   padding: 0.75rem 1.25rem;
-  /* 패딩 조정 */
+  padding-bottom: 2.5rem;
+  /* 복사 버튼을 위한 하단 패딩 추가 */
   border-radius: var(--radius-lg);
   border-bottom-left-radius: 0.25rem;
   /* 봇 메시지 꼬리 */
@@ -328,6 +336,8 @@ html {
   transition: box-shadow 0.2s ease, background-color 0.3s ease, color 0.3s ease;
   position: relative;
   /* 내부 요소 정렬 기준 */
+  font-family: inherit;
+  font-size: inherit;
 }
 
 :root.dark-mode .message.bot-message .message-content {
@@ -365,7 +375,8 @@ html {
 
 .message-content p {
   margin: 0;
-  font-family: 'Noto Sans KR', sans-serif;
+  font-family: inherit;
+  font-size: inherit;
 }
 
 /* Markdown Styles for Bot Messages */
@@ -503,8 +514,8 @@ html {
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
   resize: none;
-  font-family: 'Noto Sans KR', sans-serif;
-  font-size: 0.95rem;
+  font-family: var(--chat-font-family);
+  font-size: var(--chat-font-size);
   background-color: var(--background-color);
   color: var(--text-color);
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
@@ -597,13 +608,64 @@ html {
 .settings-container {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.75rem;
+}
+
+.settings-container {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
 }
 
 .settings-container h3 {
   margin: 0 0 0.5rem 0;
   font-size: 1.1rem;
   color: var(--text-color);
+}
+
+#fontSelect {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: var(--background-color);
+  color: var(--text-color);
+  font-family: 'Noto Sans KR', sans-serif;
+  transition: border-color var(--transition-fast);
+}
+
+#fontSelect:focus {
+  outline: none;
+  border-color: var(--primary-color);
+}
+
+#fontSizeSlider {
+  width: 100%;
+  margin-top: 0.5rem;
+  cursor: pointer;
+}
+
+#fontSizeValue {
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+#saveFontSettingsBtn {
+  margin-top: 1rem;
+  padding: 0.75rem 1.25rem;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: 'Noto Sans KR', sans-serif;
+  font-weight: 500;
+  transition: background-color var(--transition-fast), transform var(--transition-fast);
+}
+
+#saveFontSettingsBtn:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
 .input-group {
@@ -787,49 +849,78 @@ button,
   background-image: linear-gradient(135deg, #5955e0, #7070e6);
 }
 
+/* 다크모드에서 입력 필드 스타일 개선 */
+:root.dark-mode #api-key-section input[type="password"],
+:root.dark-mode #fontSelect {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #e5e7eb;
+}
+
+:root.dark-mode #api-key-section input[type="password"]:focus,
+:root.dark-mode #fontSelect:focus {
+  border-color: var(--primary-color);
+  background-color: #4b5563;
+}
+
+/* 다크모드에서 range 슬라이더 스타일 */
+:root.dark-mode #fontSizeSlider {
+  background-color: transparent;
+}
+
+:root.dark-mode #fontSizeSlider::-webkit-slider-track {
+  background-color: #374151;
+}
+
+:root.dark-mode #fontSizeSlider::-webkit-slider-thumb {
+  background-color: var(--primary-color);
+}
+
 /* 복사 버튼 스타일 (추가된 부분) */
 .copy-button {
   position: absolute;
   bottom: 8px;
-  right: -35px;
-  /* 메시지 박스 오른쪽 바깥으로 */
-  /* 안쪽으로 하려면:
-    bottom: 5px;
-    right: 5px;
-    */
+  right: 8px;
+  /* 메시지 박스 안쪽으로 이동 */
   background-color: var(--background-alt);
   border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  padding: 0;
+  border-radius: var(--radius-sm);
+  padding: 4px 10px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
-  /* 평소에는 숨김 */
-  transition: opacity 0.2s ease-in-out, background-color 0.2s ease, color 0.2s ease;
+  gap: 4px;
+  opacity: 0.8;
+  /* 항상 보이도록 설정 */
+  transition: opacity 0.2s ease-in-out, background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
   box-shadow: var(--shadow-sm);
   color: var(--text-light);
   z-index: 5;
-  /* 다른 요소 위에 오도록 */
+  font-size: 12px;
+  font-family: var(--chat-font-family);
 }
 
-/* 봇 메시지에 마우스 호버 시 복사 버튼 표시 */
+/* 봇 메시지에 마우스 호버 시 복사 버튼 강조 */
 .message.bot-message:hover .copy-button {
-  opacity: 0.7;
+  opacity: 1;
 }
 
 .copy-button:hover {
   opacity: 1;
-  background-color: var(--secondary-color);
-  color: var(--primary-color);
+  background-color: var(--primary-color);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
 }
 
 .copy-button .material-symbols-rounded {
-  font-size: 1rem;
+  font-size: 16px;
   /* 아이콘 크기 */
+}
+
+.copy-button span:not(.material-symbols-rounded) {
+  font-weight: 500;
 }
 
 .copy-button.copied .material-symbols-rounded {
@@ -854,3 +945,65 @@ button,
 :root.dark-mode .copy-button.copied .material-symbols-rounded {
   color: var(--success-color);
 }
+
+/* 토스트 메시지 스타일 */
+#toast-container {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.toast {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  padding: 12px 24px;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  margin-bottom: 10px;
+  opacity: 0;
+  transform: translateY(-20px);
+  animation: toastSlideIn 0.3s ease forwards;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--chat-font-family);
+  font-size: 14px;
+  pointer-events: auto;
+}
+
+.toast.success {
+  background-color: var(--success-color);
+  color: white;
+  border-color: var(--success-color);
+}
+
+.toast .material-symbols-rounded {
+  font-size: 20px;
+}
+
+@keyframes toastSlideIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+}
+
+.toast.fade-out {
+  animation: toastSlideOut 0.3s ease forwards;
+}
+

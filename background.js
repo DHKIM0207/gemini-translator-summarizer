@@ -4,6 +4,28 @@
 
 import { GoogleGenerativeAI } from './lib/google-generative-ai.esm.js'; // 경로 확인!
 
+// PDF 파일 감지 및 리디렉션
+chrome.webNavigation.onBeforeNavigate.addListener(
+  (details) => {
+    // 메인 프레임에서만 동작
+    if (details.frameId !== 0) return;
+    
+    const url = details.url;
+    
+    // PDF 파일인지 확인 (URL이 .pdf로 끝나는 경우)
+    if (url.toLowerCase().endsWith('.pdf') && !url.includes(chrome.runtime.getURL(''))) {
+      // 커스텀 PDF 뷰어로 리디렉션
+      const viewerUrl = chrome.runtime.getURL('pdf_viewer/viewer.html') + '?file=' + encodeURIComponent(url);
+      chrome.tabs.update(details.tabId, { url: viewerUrl });
+    }
+  },
+  { url: [{ urlMatches: '.*\\.pdf' }] }
+);
+
+// PDF 뷰어 페이지는 manifest.json의 content_scripts에서 자동으로 처리됨
+
+// PDF 뷰어는 직접 챗봇 UI를 로드하도록 변경
+
 // Readability.js를 사용하기 위한 함수
 async function getPageContentWithReadability(tabId) {
   try {

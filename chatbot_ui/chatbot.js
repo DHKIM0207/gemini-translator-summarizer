@@ -31,6 +31,12 @@ const imagePreviewContainer = document.getElementById('image-preview-container')
 const imagePreview = document.getElementById('image-preview');
 const removeImageBtn = document.getElementById('remove-image');
 
+// 폰트 설정 관련 요소
+const fontSelect = document.getElementById('fontSelect');
+const fontSizeSlider = document.getElementById('fontSizeSlider');
+const fontSizeValue = document.getElementById('fontSizeValue');
+const saveFontSettingsBtn = document.getElementById('saveFontSettingsBtn');
+
 let currentApiKey = null;
 let attachedImage = null;
 
@@ -46,8 +52,35 @@ marked.setOptions({
 
 document.addEventListener('DOMContentLoaded', initializeChatbot);
 
+// 한국어 지원 Google Fonts 목록
+const koreanFonts = [
+  { name: 'Noto Sans KR', value: 'Noto Sans KR' },
+  { name: 'Nanum Gothic', value: 'Nanum Gothic' },
+  { name: 'Nanum Myeongjo', value: 'Nanum Myeongjo' },
+  { name: 'Nanum Pen Script', value: 'Nanum Pen Script' },
+  { name: 'Black Han Sans', value: 'Black Han Sans' },
+  { name: 'Do Hyeon', value: 'Do Hyeon' },
+  { name: 'Gothic A1', value: 'Gothic A1' },
+  { name: 'Jua', value: 'Jua' },
+  { name: 'Sunflower', value: 'Sunflower' },
+  { name: 'Gamja Flower', value: 'Gamja Flower' },
+  { name: 'Hi Melody', value: 'Hi Melody' },
+  { name: 'Cute Font', value: 'Cute Font' },
+  { name: 'Single Day', value: 'Single Day' },
+  { name: 'Gaegu', value: 'Gaegu' },
+  { name: 'Stylish', value: 'Stylish' },
+  { name: 'Poor Story', value: 'Poor Story' },
+  { name: 'Song Myung', value: 'Song Myung' },
+  { name: 'Dokdo', value: 'Dokdo' },
+  { name: 'Hahmlet', value: 'Hahmlet' },
+  { name: 'IBM Plex Sans KR', value: 'IBM Plex Sans KR' },
+  { name: 'Gowun Dodum', value: 'Gowun Dodum' },
+  { name: 'Gowun Batang', value: 'Gowun Batang' },
+  { name: 'Noto Serif KR', value: 'Noto Serif KR' }
+];
+
 function initializeChatbot() {
-  chrome.storage.local.get(['geminiApiKey', 'theme'], (result) => {
+  chrome.storage.local.get(['geminiApiKey', 'theme', 'fontFamily', 'fontSize'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
       currentApiKey = result.geminiApiKey;
@@ -62,6 +95,21 @@ function initializeChatbot() {
       document.documentElement.classList.remove('dark-mode');
       themeToggleBtn.textContent = 'dark_mode';
     }
+    
+    // 폰트 설정 로드
+    if (result.fontFamily) {
+      fontSelect.value = result.fontFamily;
+      applyFont(result.fontFamily);
+    }
+    
+    if (result.fontSize) {
+      fontSizeSlider.value = result.fontSize;
+      fontSizeValue.textContent = result.fontSize;
+      applyFontSize(result.fontSize);
+    }
+    
+    // 폰트 목록 초기화
+    initializeFontList();
   });
 
   fullscreenBtn.addEventListener('click', toggleFullscreen);
@@ -79,6 +127,18 @@ function initializeChatbot() {
   imageFileInput.addEventListener('change', handleImageUpload);
   removeImageBtn.addEventListener('click', removeAttachedImage);
   userInput.addEventListener('paste', handlePasteImage);
+  
+  // 폰트 설정 이벤트 리스너
+  fontSizeSlider.addEventListener('input', (e) => {
+    fontSizeValue.textContent = e.target.value;
+    applyFontSize(e.target.value);
+  });
+  
+  fontSelect.addEventListener('change', (e) => {
+    applyFont(e.target.value);
+  });
+  
+  saveFontSettingsBtn.addEventListener('click', saveFontSettings);
 
   sendBtn.addEventListener('click', () => {
     sendMessage();
@@ -114,6 +174,9 @@ function initializeChatbot() {
         addMessageToUI("호버 버튼에서 전달된 텍스트가 없습니다.", false, true);
         loader.classList.add('hidden');
       }
+    } else if (request.type === "IS_PDF_VIEWER_RESULT" || request.type === "PDF_PAGE_CONTENT_RESULT" || request.type === "PDF_PAGE_CONTENT_ERROR") {
+      // PDF 뷰어 관련 응답은 Promise 리스너에서 처리되므로 여기서는 무시
+      return;
     }
   });
 
@@ -156,7 +219,13 @@ function startNewChatSession(history = []) {
   }
 
   try {
-    const modelInstance = genAI.getGenerativeModel({ model: "gemini-1.5-flash-latest" });
+    const modelInstance = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash",  // Gemini 2.0 Flash (자동 업데이트 버전)
+      generationConfig: {
+        maxOutputTokens: 8192,  // 출력 토큰 제한
+        temperature: 0.7,
+      }
+    });
     chatSession = modelInstance.startChat({
       history: history,
     });
@@ -238,29 +307,32 @@ function addMessageToUI(text, isUser = false, isError = false, imageUrl = null) 
     const copyButton = document.createElement("button");
     copyButton.className = "copy-button";
     copyButton.title = "내용 복사";
-    copyButton.innerHTML = `<span class="material-symbols-rounded">content_copy</span>`;
+    copyButton.innerHTML = `
+      <span class="material-symbols-rounded">content_copy</span>
+      <span>복사</span>
+    `;
 
     copyButton.addEventListener('click', () => {
       const textToCopy = paragraph.textContent || messageTextContent;
 
       navigator.clipboard.writeText(textToCopy).then(() => {
         const icon = copyButton.querySelector('.material-symbols-rounded');
-        const originalIcon = icon.textContent;
+        const textSpan = copyButton.querySelector('span:not(.material-symbols-rounded)');
         icon.textContent = 'done';
-        copyButton.title = "복사됨!";
+        textSpan.textContent = '복사됨';
         copyButton.classList.add('copied');
+        
+        // 토스트 메시지 표시
+        showToast('클립보드에 복사되었습니다', 'success');
 
         setTimeout(() => {
-          icon.textContent = originalIcon;
-          copyButton.title = "내용 복사";
+          icon.textContent = 'content_copy';
+          textSpan.textContent = '복사';
           copyButton.classList.remove('copied');
-        }, 1500);
+        }, 2000);
       }).catch(err => {
         console.error('클립보드 복사 실패:', err);
-        copyButton.title = "복사 실패";
-        setTimeout(() => {
-          copyButton.title = "내용 복사";
-        }, 1500);
+        showToast('복사에 실패했습니다', 'error');
       });
     });
     messageDiv.appendChild(copyButton);
@@ -318,40 +390,95 @@ async function getSelectedTextFromPage() {
 
 async function handleSummarizePage() {
   if (!chatSession && !startNewChatSession()) return;
-  addMessageToUI("페이지 내용 요약을 요청합니다...", true);
-  loader.classList.remove('hidden');
-  try {
-    const pageContent = await getPageContentForChat();
-    if (!pageContent || pageContent.trim().length === 0) {
-      addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+  
+  // PDF 페이지인지 확인
+  const pdfInfo = await checkIfPdfViewerPage().catch(() => ({ isPdfViewer: false }));
+  
+  if (pdfInfo.isPdfViewer) {
+    // PDF 뷰어 페이지인 경우 현재 페이지 요약
+    const currentPage = pdfInfo.currentPage;
+    
+    addMessageToUI(`PDF ${currentPage}페이지 내용 요약을 요청합니다...`, true);
+    loader.classList.remove('hidden');
+    
+    try {
+      const pageContent = await getPdfPageContent(currentPage);
+      if (!pageContent || pageContent.trim().length === 0) {
+        addMessageToUI(`${currentPage}페이지의 내용을 가져올 수 없거나 내용이 없습니다.`, false, true);
+        loader.classList.add('hidden');
+        return;
+      }
+      const prompt = `다음은 PDF ${currentPage}페이지의 내용이야. 한국어로 핵심 내용을 중심으로 간결하게 요약해줘:\n\n${pageContent}`;
+      await streamResponse(prompt);
+    } catch (error) {
+      addMessageToUI("PDF 페이지 요약 중 오류: " + error.message, false, true);
       loader.classList.add('hidden');
-      return;
     }
-    const prompt = `다음 텍스트를 한국어로 핵심 내용을 중심으로 간결하게 요약해줘:\n\n${pageContent}`;
-    await streamResponse(prompt);
-  } catch (error) {
-    addMessageToUI("페이지 요약 중 오류: " + error.message, false, true);
-    loader.classList.add('hidden');
+  } else {
+    // 일반 웹페이지인 경우 기존 로직 유지
+    addMessageToUI("페이지 내용 요약을 요청합니다...", true);
+    loader.classList.remove('hidden');
+    try {
+      const pageContent = await getPageContentForChat();
+      if (!pageContent || pageContent.trim().length === 0) {
+        addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+        loader.classList.add('hidden');
+        return;
+      }
+      const prompt = `다음 텍스트를 한국어로 핵심 내용을 중심으로 간결하게 요약해줘:\n\n${pageContent}`;
+      await streamResponse(prompt);
+    } catch (error) {
+      addMessageToUI("페이지 요약 중 오류: " + error.message, false, true);
+      loader.classList.add('hidden');
+    }
   }
 }
 
 async function handleTranslatePage() {
   if (!chatSession && !startNewChatSession()) return;
-  addMessageToUI("페이지 전체 번역(영어를 한국어로)을 요청합니다...", true);
-  loader.classList.remove('hidden');
-  try {
-    const pageContent = await getPageContentForChat();
-    if (!pageContent || pageContent.trim().length === 0) {
-      addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+  
+  // PDF 페이지인지 확인
+  const pdfInfo = await checkIfPdfViewerPage().catch(() => ({ isPdfViewer: false }));
+  
+  if (pdfInfo.isPdfViewer) {
+    // PDF 뷰어 페이지인 경우 현재 페이지 번역
+    const currentPage = pdfInfo.currentPage;
+    
+    addMessageToUI(`PDF ${currentPage}페이지 번역을 요청합니다...`, true);
+    loader.classList.remove('hidden');
+    
+    try {
+      const pageContent = await getPdfPageContent(currentPage);
+      if (!pageContent || pageContent.trim().length === 0) {
+        addMessageToUI(`${currentPage}페이지의 내용을 가져올 수 없거나 내용이 없습니다.`, false, true);
+        loader.classList.add('hidden');
+        return;
+      }
+      const targetLanguage = "한국어";
+      const prompt = `다음 텍스트는 PDF ${currentPage}페이지의 내용이야. 이 내용을 ${targetLanguage}(으)로 자연스럽게 번역해줘:\n\n${pageContent}`;
+      await streamResponse(prompt);
+    } catch (error) {
+      addMessageToUI("PDF 페이지 번역 중 오류: " + error.message, false, true);
       loader.classList.add('hidden');
-      return;
     }
-    const targetLanguage = "한국어";
-    const prompt = `다음 텍스트는 영어로 작성된 내용이야. 이 내용을 ${targetLanguage}(으)로 자연스럽게 번역해줘. HTML 태그나 코드는 번역 결과에 포함하지 마.:\n\n${pageContent}`;
-    await streamResponse(prompt);
-  } catch (error) {
-    addMessageToUI("페이지 번역 중 오류: " + error.message, false, true);
-    loader.classList.add('hidden');
+  } else {
+    // 일반 웹페이지인 경우 기존 로직 유지
+    addMessageToUI("페이지 전체 번역(영어를 한국어로)을 요청합니다...", true);
+    loader.classList.remove('hidden');
+    try {
+      const pageContent = await getPageContentForChat();
+      if (!pageContent || pageContent.trim().length === 0) {
+        addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+        loader.classList.add('hidden');
+        return;
+      }
+      const targetLanguage = "한국어";
+      const prompt = `다음 텍스트는 영어로 작성된 내용이야. 이 내용을 ${targetLanguage}(으)로 자연스럽게 번역해줘. HTML 태그나 코드는 번역 결과에 포함하지 마.:\n\n${pageContent}`;
+      await streamResponse(prompt);
+    } catch (error) {
+      addMessageToUI("페이지 번역 중 오류: " + error.message, false, true);
+      loader.classList.add('hidden');
+    }
   }
 }
 
@@ -360,13 +487,31 @@ async function handleTranslateSelectedText(textToTranslate = null) {
 
   loader.classList.remove('hidden');
   try {
-    const selectedText = textToTranslate || await getSelectedTextFromPage();
+    let selectedText = textToTranslate || await getSelectedTextFromPage();
+    
+    // selectedText를 문자열로 변환하고 검증
+    if (selectedText === null || selectedText === undefined) {
+      selectedText = "";
+    } else {
+      selectedText = String(selectedText);
+    }
 
     if (!selectedText || selectedText.trim().length === 0) {
-      addMessageToUI("번역할 텍스트가 선택되지 않았습니다.", false, true);
+      // PDF 페이지인지 확인
+      const isPdf = await checkIfPdfPage().catch(() => false);
+      
+      if (isPdf) {
+        addMessageToUI("PDF에서 텍스트를 선택할 수 없습니다.\n\n번역하려는 텍스트를 아래 입력창에 직접 복사하여 붙여넣고 전송해주세요.", false, true);
+      } else {
+        addMessageToUI("번역할 텍스트가 선택되지 않았습니다.", false, true);
+      }
       loader.classList.add('hidden');
       return;
     }
+
+    // 선택된 텍스트가 있는 경우 사용자에게 표시
+    const displayText = selectedText.length > 100 ? selectedText.substring(0, 100) + "..." : selectedText;
+    addMessageToUI(`선택된 텍스트 번역: "${displayText}"`, true);
 
     const targetLanguage = "한국어";
     const prompt = `다음 텍스트를 ${targetLanguage}(으)로 번역해줘:\n\n"${selectedText}"`;
@@ -376,6 +521,92 @@ async function handleTranslateSelectedText(textToTranslate = null) {
     loader.classList.add('hidden');
   }
 }
+
+// PDF 페이지인지 확인하는 함수 추가
+async function checkIfPdfPage() {
+  return new Promise((resolve) => {
+    const requestId = `pdf_check_req_${Date.now()}`;
+    let resolved = false;
+    
+    const listener = (event) => {
+      if (event.source === window.parent && event.data && event.data.requestId === requestId) {
+        window.removeEventListener("message", listener);
+        resolved = true;
+        resolve(event.data.isPdf || false);
+      }
+    };
+    
+    window.addEventListener("message", listener);
+    window.parent.postMessage({ type: "CHECK_IS_PDF", requestId: requestId }, "*");
+    
+    // 타임아웃 처리
+    setTimeout(() => {
+      if (!resolved) {
+        window.removeEventListener("message", listener);
+        resolve(false);
+      }
+    }, 1000);
+  });
+}
+
+// PDF 뷰어 페이지인지 확인하는 함수 추가 (커스텀 뷰어)
+async function checkIfPdfViewerPage() {
+  return new Promise((resolve) => {
+    const requestId = `pdf_viewer_check_req_${Date.now()}`;
+    let resolved = false;
+    
+    const listener = (event) => {
+      if (event.source === window.parent && event.data && event.data.requestId === requestId) {
+        window.removeEventListener("message", listener);
+        resolved = true;
+        resolve({
+          isPdfViewer: event.data.isPdfViewer || false,
+          currentPage: event.data.currentPage || 1,
+          totalPages: event.data.totalPages || 0
+        });
+      }
+    };
+    
+    window.addEventListener("message", listener);
+    window.parent.postMessage({ type: "CHECK_IS_PDF_VIEWER", requestId: requestId }, "*");
+    
+    // 타임아웃 처리
+    setTimeout(() => {
+      if (!resolved) {
+        window.removeEventListener("message", listener);
+        resolve({ isPdfViewer: false, currentPage: 1, totalPages: 0 });
+      }
+    }, 1000);
+  });
+}
+
+// 특정 PDF 페이지 내용 가져오기
+async function getPdfPageContent(pageNumber) {
+  return new Promise((resolve, reject) => {
+    const requestId = `pdf_page_content_req_${Date.now()}`;
+    const listener = (event) => {
+      if (event.source === window.parent && event.data && event.data.requestId === requestId) {
+        window.removeEventListener("message", listener);
+        if (event.data.type === "PDF_PAGE_CONTENT_RESULT") {
+          resolve(event.data.content);
+        } else {
+          reject(new Error(event.data.error || "PDF 페이지 내용을 가져오지 못했습니다."));
+        }
+      }
+    };
+    window.addEventListener("message", listener);
+    window.parent.postMessage({ 
+      type: "GET_PDF_PAGE_CONTENT", 
+      pageNumber: pageNumber,
+      requestId: requestId 
+    }, "*");
+    setTimeout(() => {
+      window.removeEventListener("message", listener);
+      reject(new Error("PDF 페이지 내용 요청 시간 초과"));
+    }, 10000);
+  });
+}
+
 
 async function streamResponse(promptText, imageParts = null) {
   if (!chatSession && !startNewChatSession()) {
@@ -423,6 +654,7 @@ async function streamResponse(promptText, imageParts = null) {
         chatMessages.scrollTop = chatMessages.scrollHeight;
       }
     }
+    
 
     if (copyButton) {
       const newCopyButton = copyButton.cloneNode(true);
@@ -434,22 +666,22 @@ async function streamResponse(promptText, imageParts = null) {
 
         navigator.clipboard.writeText(textToCopy).then(() => {
           const icon = newCopyButton.querySelector('.material-symbols-rounded');
-          const originalIcon = 'content_copy';
+          const textSpan = newCopyButton.querySelector('span:not(.material-symbols-rounded)');
           icon.textContent = 'done';
-          newCopyButton.title = "복사됨!";
+          textSpan.textContent = '복사됨';
           newCopyButton.classList.add('copied');
+          
+          // 토스트 메시지 표시
+          showToast('클립보드에 복사되었습니다', 'success');
 
           setTimeout(() => {
-            icon.textContent = originalIcon;
-            newCopyButton.title = "내용 복사";
+            icon.textContent = 'content_copy';
+            textSpan.textContent = '복사';
             newCopyButton.classList.remove('copied');
-          }, 1500);
+          }, 2000);
         }).catch(err => {
           console.error('클립보드 복사 실패:', err);
-          newCopyButton.title = "복사 실패";
-          setTimeout(() => {
-            newCopyButton.title = "내용 복사";
-          }, 1500);
+          showToast('복사에 실패했습니다', 'error');
         });
       });
     }
@@ -635,4 +867,101 @@ function toggleTheme() {
 function clearChatMessages() {
   chatMessages.innerHTML = '';
   addMessageToUI("안녕하세요! 무엇을 도와드릴까요? 페이지 전체에 대해서는 '페이지 요약' 또는 '페이지 번역' 버튼을, 선택한 텍스트에 대해서는 '선택 영역 번역' 버튼을 사용하거나, 직접 메시지를 입력해주세요.", false);
+}
+
+// 폰트 목록 초기화
+function initializeFontList() {
+  // 기본 옵션 유지
+  fontSelect.innerHTML = '<option value="">기본 폰트</option>';
+  
+  // 한국어 폰트 추가
+  koreanFonts.forEach(font => {
+    const option = document.createElement('option');
+    option.value = font.value;
+    option.textContent = font.name;
+    fontSelect.appendChild(option);
+  });
+}
+
+// 폰트 적용
+function applyFont(fontFamily) {
+  if (!fontFamily) {
+    // 기본 폰트로 복원
+    document.documentElement.style.removeProperty('--chat-font-family');
+  } else {
+    // Google Fonts 로드
+    loadGoogleFont(fontFamily);
+    
+    // CSS 변수로 폰트 설정
+    document.documentElement.style.setProperty('--chat-font-family', `'${fontFamily}', 'Noto Sans KR', sans-serif`);
+  }
+}
+
+// 폰트 크기 적용
+function applyFontSize(size) {
+  document.documentElement.style.setProperty('--chat-font-size', `${size}px`);
+}
+
+// Google Fonts 로드
+function loadGoogleFont(fontFamily) {
+  const linkId = `google-font-${fontFamily.replace(/\s+/g, '-')}`;
+  
+  if (!document.getElementById(linkId)) {
+    const link = document.createElement('link');
+    link.id = linkId;
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${fontFamily.replace(/\s+/g, '+')}:wght@300;400;500;700&display=swap`;
+    document.head.appendChild(link);
+  }
+}
+
+// 폰트 설정 저장
+function saveFontSettings() {
+  const fontFamily = fontSelect.value;
+  const fontSize = fontSizeSlider.value;
+  
+  chrome.storage.local.set({
+    fontFamily: fontFamily,
+    fontSize: fontSize
+  }, () => {
+    // 저장 완료 메시지 표시
+    const msg = document.createElement('p');
+    msg.textContent = '폰트 설정이 저장되었습니다.';
+    msg.style.color = '#10b981';
+    msg.style.marginTop = '0.5rem';
+    msg.style.fontSize = '0.9rem';
+    
+    saveFontSettingsBtn.parentNode.appendChild(msg);
+    
+    setTimeout(() => {
+      msg.remove();
+    }, 2000);
+  });
+}
+
+// 토스트 메시지 표시 함수
+function showToast(message, type = 'default') {
+  const toastContainer = document.getElementById('toast-container');
+  
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  
+  const icon = document.createElement('span');
+  icon.className = 'material-symbols-rounded';
+  icon.textContent = type === 'success' ? 'check_circle' : 'info';
+  
+  const text = document.createElement('span');
+  text.textContent = message;
+  
+  toast.appendChild(icon);
+  toast.appendChild(text);
+  toastContainer.appendChild(toast);
+  
+  // 3초 후 사라지게 하기
+  setTimeout(() => {
+    toast.classList.add('fade-out');
+    setTimeout(() => {
+      toast.remove();
+    }, 300);
+  }, 3000);
 }

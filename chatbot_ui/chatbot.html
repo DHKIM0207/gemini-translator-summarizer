@@ -16,7 +16,7 @@
     <header id="chatbot-header">
       <div class="header-title">
         <span class="material-symbols-rounded">smart_toy</span>
-        <h2>Gemini AI 도우미</h2>
+        <h2>Gemini 2.0 AI 도우미</h2>
       </div>
       <div class="header-icons">
         <span class="material-symbols-rounded" id="fullscreen-btn" title="전체 화면">fullscreen</span>
@@ -36,6 +36,21 @@
         </div>
         <button id="saveApiKeyBtn">저장</button>
         <p id="apiKeyMsg"></p>
+      </div>
+      
+      <div class="settings-container">
+        <h3>폰트 설정</h3>
+        <div class="input-group">
+          <label for="fontSelect">폰트 선택</label>
+          <select id="fontSelect">
+            <option value="">기본 폰트</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label for="fontSizeSlider">폰트 크기: <span id="fontSizeValue">14</span>px</label>
+          <input type="range" id="fontSizeSlider" min="12" max="20" value="14" step="1">
+        </div>
+        <button id="saveFontSettingsBtn">폰트 설정 저장</button>
       </div>
     </div>
 
@@ -87,6 +102,7 @@
       </button>
     </div>
     <div id="loader" class="hidden"></div>
+    <div id="toast-container"></div>
   </div>
   <script type="module" src="chatbot.js"></script>
 </body>

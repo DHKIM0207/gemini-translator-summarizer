@@ -11,47 +11,123 @@
   const translateIconUrl = 'https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/translate/default/24px.svg';
 
   function isPdfPage() {
+    // URL로 PDF 확인
     if (window.location.href.toLowerCase().endsWith('.pdf')) {
       return true;
     }
-    if (document.querySelector('#viewerContainer') ||
-      document.querySelector('.pdfViewer') ||
-      document.querySelector('#viewer')) {
+    
+    // Chrome PDF viewer의 embed 태그 확인
+    const embedElement = document.querySelector('embed[type="application/pdf"]');
+    if (embedElement) {
       return true;
     }
+    
+    // Chrome PDF viewer의 특정 클래스나 ID 확인
+    if (document.querySelector('#viewerContainer') ||
+      document.querySelector('.pdfViewer') ||
+      document.querySelector('#viewer') ||
+      document.querySelector('pdf-viewer')) {
+      return true;
+    }
+    
+    // Content-Type 확인 (meta 태그)
+    const contentType = document.querySelector('meta[http-equiv="content-type"]');
+    if (contentType && contentType.content.includes('application/pdf')) {
+      return true;
+    }
+    
     return false;
   }
 
-  async function extractPdfPageContent() {
+  async function extractPdfPageContent(currentPageOnly = false) {
     try {
+      // Chrome의 최신 PDF 뷰어는 embed 태그를 사용
+      const embedElement = document.querySelector('embed[type="application/pdf"]');
+      
+      if (embedElement) {
+        // embed 태그가 있는 경우, 선택된 텍스트를 가져오는 방식 사용
+        console.log("Chrome PDF 뷰어 감지 (embed 방식)");
+        
+        // 현재 선택된 텍스트가 있는지 확인
+        const selection = window.getSelection();
+        if (selection && selection.toString().trim()) {
+          return selection.toString().trim();
+        }
+        
+        // PDF에서 직접 텍스트를 추출할 수 없으므로 
+        // 사용자에게 텍스트를 선택하도록 안내
+        if (currentPageOnly) {
+          return "[PDF 텍스트 추출 불가]\n\n현재 Chrome의 내장 PDF 뷰어에서는 자동으로 텍스트를 추출할 수 없습니다.\n\n번역하려는 텍스트를 마우스로 드래그하여 선택한 후 '선택 영역 번역' 버튼을 사용해주세요.";
+        }
+      }
+      
+      // 기존 방식 (다른 PDF 뷰어를 위한 폴백)
       const viewerContainer = document.querySelector('#viewerContainer') ||
         document.querySelector('.pdfViewer') ||
         document.querySelector('#viewer');
 
       if (!viewerContainer) {
         console.warn("PDF 뷰어를 찾을 수 없습니다.");
+        
+        // PDF 페이지인 경우 안내 메시지 반환
+        if (isPdfPage()) {
+          return "[PDF 텍스트 추출 불가]\n\n현재 페이지의 텍스트를 자동으로 추출할 수 없습니다.\n\n번역하려는 텍스트를 마우스로 드래그하여 선택한 후 '선택 영역 번역' 버튼을 사용해주세요.";
+        }
         return "";
       }
 
-      const visiblePages = Array.from(viewerContainer.querySelectorAll('.page'))
-        .filter(page => {
+      let pagesToExtract;
+      
+      if (currentPageOnly) {
+        // 현재 페이지만 추출하는 경우 - 가장 많이 보이는 페이지를 찾음
+        const allPages = Array.from(viewerContainer.querySelectorAll('.page'));
+        let mostVisiblePage = null;
+        let maxVisibleHeight = 0;
+        
+        allPages.forEach(page => {
           const rect = page.getBoundingClientRect();
-          return rect.top < window.innerHeight && rect.bottom > 0;
+          const viewportTop = 0;
+          const viewportBottom = window.innerHeight;
+          
+          // 페이지가 뷰포트 내에 얼마나 보이는지 계산
+          const visibleTop = Math.max(rect.top, viewportTop);
+          const visibleBottom = Math.min(rect.bottom, viewportBottom);
+          const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+          
+          if (visibleHeight > maxVisibleHeight) {
+            maxVisibleHeight = visibleHeight;
+            mostVisiblePage = page;
+          }
         });
+        
+        pagesToExtract = mostVisiblePage ? [mostVisiblePage] : [];
+      } else {
+        // 기존 로직: 보이는 모든 페이지 추출
+        pagesToExtract = Array.from(viewerContainer.querySelectorAll('.page'))
+          .filter(page => {
+            const rect = page.getBoundingClientRect();
+            return rect.top < window.innerHeight && rect.bottom > 0;
+          });
+      }
 
-      if (!visiblePages.length) {
-        console.warn("현재 보이는 PDF 페이지를 찾을 수 없습니다.");
+      if (!pagesToExtract.length) {
+        console.warn("추출할 PDF 페이지를 찾을 수 없습니다.");
         return "";
       }
 
       let pageTexts = [];
-      for (const page of visiblePages) {
+      for (const page of pagesToExtract) {
         const textLayer = page.querySelector('.textLayer');
         if (!textLayer) continue;
 
         const textElements = Array.from(textLayer.querySelectorAll('span'));
         const pageText = textElements.map(span => span.textContent).join(' ');
         if (pageText.trim()) {
+          // 현재 페이지 번호 가져오기 (디버깅용)
+          const pageNumber = page.getAttribute('data-page-number');
+          if (currentPageOnly && pageNumber) {
+            console.log(`PDF 현재 페이지 번호: ${pageNumber}`);
+          }
           pageTexts.push(pageText);
         }
       }
@@ -125,7 +201,33 @@
     if (!hoverTranslateButton) {
       hoverTranslateButton = document.createElement('button');
       hoverTranslateButton.id = 'selection-translate-hover-btn';
-      hoverTranslateButton.innerHTML = `<img src="${translateIconUrl}" alt="Translate">`;
+      hoverTranslateButton.innerHTML = '<span style="color: white !important; font-size: 24px; line-height: 1; font-family: \'Material Symbols Outlined\'; font-weight: normal; font-style: normal; display: inline-block;">language_korean_latin</span>';
+      
+      // Material Symbols Outlined 폰트 추가 (스타일 태그로)
+      if (!document.querySelector('#material-symbols-style')) {
+        const style = document.createElement('style');
+        style.id = 'material-symbols-style';
+        style.textContent = `
+          @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+          
+          #selection-translate-hover-btn span {
+            font-family: 'Material Symbols Outlined' !important;
+            font-weight: normal;
+            font-style: normal;
+            font-size: 24px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            display: inline-block;
+            white-space: nowrap;
+            word-wrap: normal;
+            direction: ltr;
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+          }
+        `;
+        document.head.appendChild(style);
+      }
       hoverTranslateButton.addEventListener('click', handleHoverTranslateClick);
       document.body.appendChild(hoverTranslateButton);
     }
@@ -139,8 +241,8 @@
     hoverTranslateButton.style.top = `${y}px`;
     hoverTranslateButton.style.display = 'flex';
 
+    // 타이머 설정하지 않음 - 드래그 중에는 사라지지 않도록
     clearTimeout(hideHoverButtonTimeout);
-    hideHoverButtonTimeout = setTimeout(hideHoverTranslateButton, 3000);
   }
 
   function hideHoverTranslateButton() {
@@ -165,7 +267,29 @@
 
   function handleHoverTranslateClick(event) {
     event.stopPropagation();
-    const selectedText = window.getSelection().toString().trim();
+    
+    let selectedText = "";
+    try {
+      // PDF에서도 작동하도록 개선된 텍스트 선택 로직
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+        selectedText = selection.toString();
+      }
+      
+      // PDF embed 요소가 있고 텍스트가 없는 경우
+      if (!selectedText && document.querySelector('embed[type="application/pdf"]')) {
+        const docSelection = document.getSelection();
+        if (docSelection && docSelection.rangeCount > 0) {
+          selectedText = docSelection.toString();
+        }
+      }
+    } catch (error) {
+      console.error("호버 번역: 텍스트 선택 중 오류:", error);
+    }
+    
+    selectedText = selectedText.trim();
+    console.log("호버 번역 선택된 텍스트:", selectedText);
+    
     if (!selectedText) {
       hideHoverTranslateButton();
       return;
@@ -210,10 +334,27 @@
     }, 50);
   });
 
-  document.addEventListener('mousedown', (event) => {
-    if (hoverTranslateButton && !hoverTranslateButton.contains(event.target)) {
+  // 선택 영역이 변경되면 버튼 숨기기
+  document.addEventListener('selectionchange', () => {
+    const selection = window.getSelection();
+    if (!selection || selection.isCollapsed || !selection.toString().trim()) {
       hideHoverTranslateButton();
     }
+  });
+
+  // 클릭 시 선택 영역이 해제되면 버튼 숨기기
+  document.addEventListener('click', (event) => {
+    if (hoverTranslateButton && hoverTranslateButton.contains(event.target)) {
+      return;
+    }
+    
+    // 잠시 후 선택 영역 확인
+    setTimeout(() => {
+      const selection = window.getSelection();
+      if (!selection || selection.isCollapsed || !selection.toString().trim()) {
+        hideHoverTranslateButton();
+      }
+    }, 100);
   });
 
   if (document.readyState === "complete" || document.readyState === "interactive") {
@@ -240,8 +381,52 @@
         chatbotIframe.contentWindow.postMessage({ type: "PAGE_CONTENT_ERROR", error: error.message, requestId: event.data.requestId }, chatbotOrigin);
       });
     } else if (event.data.type === "GET_SELECTED_TEXT") {
-      const selectedText = window.getSelection().toString().trim();
-      chatbotIframe.contentWindow.postMessage({ type: "SELECTED_TEXT_RESULT", selectedText: selectedText, requestId: event.data.requestId }, chatbotOrigin);
+      let selectedText = "";
+      
+      try {
+        // 기본 방식: window.getSelection() 사용
+        const selection = window.getSelection();
+        if (selection && selection.rangeCount > 0) {
+          selectedText = selection.toString();
+          console.log("선택된 텍스트 (getSelection):", selectedText);
+        }
+        
+        // PDF embed 요소가 있는 경우 추가 확인
+        const embedElement = document.querySelector('embed[type="application/pdf"]');
+        if (embedElement && !selectedText) {
+          // embed 요소가 있을 때 document.getSelection() 시도
+          const docSelection = document.getSelection();
+          if (docSelection && docSelection.rangeCount > 0) {
+            selectedText = docSelection.toString();
+            console.log("선택된 텍스트 (document.getSelection):", selectedText);
+          }
+        }
+        
+        // 여전히 텍스트가 없으면 activeElement 확인
+        if (!selectedText && document.activeElement) {
+          const activeSelection = document.activeElement.contentDocument?.getSelection?.();
+          if (activeSelection) {
+            selectedText = activeSelection.toString();
+            console.log("선택된 텍스트 (activeElement):", selectedText);
+          }
+        }
+      } catch (error) {
+        console.error("텍스트 선택 중 오류:", error);
+      }
+      
+      console.log("최종 선택된 텍스트:", selectedText);
+      chatbotIframe.contentWindow.postMessage({ 
+        type: "SELECTED_TEXT_RESULT", 
+        selectedText: selectedText.trim(), 
+        requestId: event.data.requestId 
+      }, chatbotOrigin);
+    } else if (event.data.type === "CHECK_IS_PDF") {
+      // PDF 페이지인지 확인
+      chatbotIframe.contentWindow.postMessage({ 
+        type: "IS_PDF_RESULT", 
+        isPdf: isPdfPage(), 
+        requestId: event.data.requestId 
+      }, chatbotOrigin);
     }
   });
 

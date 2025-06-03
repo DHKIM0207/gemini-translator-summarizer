@@ -1,0 +1,259 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: #525659;
+  overflow: hidden;
+  height: 100vh;
+}
+
+#pdf-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+#pdf-header {
+  background-color: #323639;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  z-index: 10;
+}
+
+.header-left, .header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-center {
+  flex: 1;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 0 20px;
+}
+
+#pdf-header button {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 5px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+#pdf-header button:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+#pdf-header button:active {
+  background-color: rgba(255,255,255,0.2);
+}
+
+#page-info {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+#page-num {
+  width: 50px;
+  padding: 2px 5px;
+  border: 1px solid rgba(255,255,255,0.3);
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+  border-radius: 4px;
+  text-align: center;
+}
+
+#zoom-level {
+  font-size: 14px;
+  min-width: 50px;
+  text-align: center;
+}
+
+#pdf-viewer {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  background-color: #525659;
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+#pdf-render-container {
+  position: relative;
+  display: inline-block;
+}
+
+#pdf-canvas {
+  background-color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+  max-width: 100%;
+  height: auto;
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.textLayer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  opacity: 0.2;
+  line-height: 1.0;
+  z-index: 2;
+}
+
+.textLayer > span {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+/* PDF.js가 생성하는 div 요소들을 위한 스타일 */
+.textLayer > div {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+
+.textLayer ::selection {
+  background: rgba(0, 123, 255, 0.3);
+}
+
+.textLayer .highlight {
+  background-color: rgba(255, 237, 0, 0.5);
+  border-radius: 2px;
+}
+
+.textLayer .highlight {
+  margin: -1px;
+  padding: 1px;
+  background-color: rgba(180, 0, 170, 0.3);
+  border-radius: 4px;
+}
+
+#loading-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+}
+
+.spinner {
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid white;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 20px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+#error-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+  color: white;
+  background-color: rgba(220, 53, 69, 0.9);
+  padding: 20px;
+  border-radius: 8px;
+}
+
+#error-message .material-symbols-rounded {
+  font-size: 48px;
+  margin-bottom: 10px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* FAB 버튼 스타일 */
+#gemini-fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 56px;
+  height: 56px;
+  background-color: #1a73e8;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  z-index: 1000;
+}
+
+#gemini-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.4);
+}
+
+#gemini-fab img {
+  width: 24px;
+  height: 24px;
+  filter: invert(1);
+}
+
+/* 텍스트 선택 시 스타일 */
+::selection {
+  background-color: #b3d4fc;
+  color: #000;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  #pdf-header {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  
+  .header-center {
+    order: -1;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 10px;
+  }
+  
+  #pdf-viewer {
+    padding: 10px;
+  }
+}
