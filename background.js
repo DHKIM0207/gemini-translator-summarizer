@@ -22,6 +22,28 @@ chrome.webNavigation.onBeforeNavigate.addListener(
   { url: [{ urlMatches: '.*\\.pdf' }] }
 );
 
+// 확장 프로그램 시작 시 기존 PDF 탭들 확인 및 리다이렉트
+chrome.runtime.onStartup.addListener(checkExistingPdfTabs);
+chrome.runtime.onInstalled.addListener(checkExistingPdfTabs);
+
+async function checkExistingPdfTabs() {
+  try {
+    // 모든 탭 조회
+    const tabs = await chrome.tabs.query({});
+    
+    for (const tab of tabs) {
+      if (tab.url && tab.url.toLowerCase().endsWith('.pdf') && !tab.url.includes(chrome.runtime.getURL(''))) {
+        // PDF 탭 발견, 커스텀 뷰어로 리다이렉트
+        const viewerUrl = chrome.runtime.getURL('pdf_viewer/viewer.html') + '?file=' + encodeURIComponent(tab.url);
+        await chrome.tabs.update(tab.id, { url: viewerUrl });
+        console.log('기존 PDF 탭을 커스텀 뷰어로 리다이렉트:', tab.url);
+      }
+    }
+  } catch (error) {
+    console.error('기존 PDF 탭 확인 중 오류:', error);
+  }
+}
+
 // PDF 뷰어 페이지는 manifest.json의 content_scripts에서 자동으로 처리됨
 
 // PDF 뷰어는 직접 챗봇 UI를 로드하도록 변경

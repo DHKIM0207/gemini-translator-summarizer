@@ -439,7 +439,7 @@ document.addEventListener('mouseup', (event) => {
       const rect = range.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
       
-      const btnX = rect.right + 5;
+      const btnX = rect.left + (rect.width / 2) - 21;
       const btnY = rect.bottom + 5;
       showHoverTranslateButton(btnX, btnY);
     }
