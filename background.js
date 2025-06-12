@@ -12,14 +12,16 @@ chrome.webNavigation.onBeforeNavigate.addListener(
     
     const url = details.url;
     
-    // PDF 파일인지 확인 (URL이 .pdf로 끝나는 경우)
-    if (url.toLowerCase().endsWith('.pdf') && !url.includes(chrome.runtime.getURL(''))) {
+    // PDF 파일인지 확인 (URL이 .pdf로 끝나거나 arxiv.org/pdf/ 패턴인 경우)
+    const isPdf = url.toLowerCase().endsWith('.pdf') || url.includes('arxiv.org/pdf/');
+    
+    if (isPdf && !url.includes(chrome.runtime.getURL(''))) {
       // 커스텀 PDF 뷰어로 리디렉션
       const viewerUrl = chrome.runtime.getURL('pdf_viewer/viewer.html') + '?file=' + encodeURIComponent(url);
       chrome.tabs.update(details.tabId, { url: viewerUrl });
     }
   },
-  { url: [{ urlMatches: '.*\\.pdf' }] }
+  { url: [{ urlMatches: '.*\\.pdf|.*arxiv\\.org/pdf/.*' }] }
 );
 
 // 확장 프로그램 시작 시 기존 PDF 탭들 확인 및 리다이렉트
@@ -32,7 +34,10 @@ async function checkExistingPdfTabs() {
     const tabs = await chrome.tabs.query({});
     
     for (const tab of tabs) {
-      if (tab.url && tab.url.toLowerCase().endsWith('.pdf') && !tab.url.includes(chrome.runtime.getURL(''))) {
+      // PDF 파일인지 확인 (URL이 .pdf로 끝나거나 arxiv.org/pdf/ 패턴인 경우)
+      const isPdf = tab.url && (tab.url.toLowerCase().endsWith('.pdf') || tab.url.includes('arxiv.org/pdf/'));
+      
+      if (isPdf && !tab.url.includes(chrome.runtime.getURL(''))) {
         // PDF 탭 발견, 커스텀 뷰어로 리다이렉트
         const viewerUrl = chrome.runtime.getURL('pdf_viewer/viewer.html') + '?file=' + encodeURIComponent(tab.url);
         await chrome.tabs.update(tab.id, { url: viewerUrl });
