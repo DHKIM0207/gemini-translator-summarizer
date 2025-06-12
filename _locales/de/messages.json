@@ -1,0 +1,233 @@
+{
+  "extensionName": {
+    "message": "Gemini Übersetzer & Zusammenfasser"
+  },
+  "extensionDescription": {
+    "message": "KI-gestütztes Übersetzungs- und Zusammenfassungstool mit Google Gemini API"
+  },
+  "apiKeyInputPlaceholder": {
+    "message": "Geben Sie Ihren Gemini API-Schlüssel ein"
+  },
+  "saveApiKey": {
+    "message": "API-Schlüssel speichern"
+  },
+  "apiKeySaved": {
+    "message": "API-Schlüssel erfolgreich gespeichert."
+  },
+  "chatbotTitle": {
+    "message": "KI-Übersetzung & Zusammenfassung"
+  },
+  "summarizePageButton": {
+    "message": "Diese Seite zusammenfassen"
+  },
+  "translatePageButton": {
+    "message": "Diese Seite übersetzen"
+  },
+  "uploadImageButton": {
+    "message": "Bild hochladen"
+  },
+  "darkModeToggle": {
+    "message": "🌙"
+  },
+  "lightModeToggle": {
+    "message": "☀️"
+  },
+  "messageInputPlaceholder": {
+    "message": "Geben Sie Ihre Nachricht ein..."
+  },
+  "sendButton": {
+    "message": "Senden"
+  },
+  "copyButton": {
+    "message": "Kopieren"
+  },
+  "copiedMessage": {
+    "message": "Kopiert!"
+  },
+  "imageSelected": {
+    "message": "Bild ausgewählt"
+  },
+  "removeImage": {
+    "message": "Bild entfernen"
+  },
+  "errorNoApiKey": {
+    "message": "API-Schlüssel nicht festgelegt. Bitte geben Sie Ihren API-Schlüssel in den Einstellungen ein."
+  },
+  "errorPageExtraction": {
+    "message": "Fehler beim Extrahieren des Seiteninhalts"
+  },
+  "errorApiCall": {
+    "message": "Fehler beim Aufrufen der Gemini API"
+  },
+  "errorNoSelectedText": {
+    "message": "Kein Text ausgewählt."
+  },
+  "translatePrompt": {
+    "message": "Bitte übersetzen Sie den folgenden Text:"
+  },
+  "summarizePrompt": {
+    "message": "Bitte fassen Sie den folgenden Webseiteninhalt zusammen:"
+  },
+  "pdfTranslatePrompt": {
+    "message": "Bitte übersetzen Sie den folgenden PDF-Text:"
+  },
+  "imageAnalyzePrompt": {
+    "message": "Bitte analysieren Sie dieses Bild und erklären Sie es."
+  },
+  "generalPromptPrefix": {
+    "message": "Bitte antworten Sie auf Deutsch."
+  },
+  "loadingMessage": {
+    "message": "Bitte warten..."
+  },
+  "pdfViewerTitle": {
+    "message": "PDF-Viewer"
+  },
+  "translateSelectedText": {
+    "message": "Ausgewählten Text übersetzen"
+  },
+  "aiAssistant": {
+    "message": "KI-Assistent"
+  },
+  "newConversation": {
+    "message": "Neue Unterhaltung"
+  },
+  "targetLanguage": {
+    "message": "Zielsprache"
+  },
+  "langKorean": {
+    "message": "Koreanisch"
+  },
+  "langEnglish": {
+    "message": "Englisch"
+  },
+  "langJapanese": {
+    "message": "Japanisch"
+  },
+  "langChinese": {
+    "message": "Chinesisch (Vereinfacht)"
+  },
+  "langSpanish": {
+    "message": "Spanisch"
+  },
+  "langFrench": {
+    "message": "Französisch"
+  },
+  "langGerman": {
+    "message": "Deutsch"
+  },
+  "langVietnamese": {
+    "message": "Vietnamesisch"
+  },
+  "summarizeButton": {
+    "message": "Seite zusammenfassen"
+  },
+  "translateButton": {
+    "message": "Seite übersetzen"
+  },
+  "resultPlaceholder": {
+    "message": "Ergebnisse werden hier angezeigt."
+  },
+  "errorNoActiveTab": {
+    "message": "Kein aktiver Tab gefunden."
+  },
+  "errorEmptyResponse": {
+    "message": "Leere Antwort von API erhalten. Bitte überprüfen Sie Ihre Eingabe oder versuchen Sie anderen Inhalt."
+  },
+  "languageChanged": {
+    "message": "Sprache geändert. Aktualisieren Sie die Seite, um sie anzuwenden."
+  },
+  "languageSettings": {
+    "message": "Spracheinstellungen"
+  },
+  "selectLanguage": {
+    "message": "Sprache auswählen"
+  },
+  "fullscreen": {
+    "message": "Vollbild"
+  },
+  "fullscreenExit": {
+    "message": "Vollbild verlassen"
+  },
+  "themeToggle": {
+    "message": "Thema umschalten"
+  },
+  "settings": {
+    "message": "Einstellungen"
+  },
+  "closeChatbot": {
+    "message": "Chatbot schließen"
+  },
+  "apiKeySettings": {
+    "message": "API-Schlüssel Einstellungen"
+  },
+  "fontSettings": {
+    "message": "Schriftart-Einstellungen"
+  },
+  "selectFont": {
+    "message": "Schriftart auswählen"
+  },
+  "defaultFont": {
+    "message": "Standardschriftart"
+  },
+  "fontSize": {
+    "message": "Schriftgröße"
+  },
+  "saveFontSettings": {
+    "message": "Schriftart-Einstellungen speichern"
+  },
+  "welcomeMessage": {
+    "message": "Hallo! Wie kann ich Ihnen helfen? Verwenden Sie die Schaltflächen 'Seite zusammenfassen' oder 'Seite übersetzen' für die gesamte Seite, 'Ausgewählte übersetzen' für ausgewählten Text oder geben Sie Ihre Nachricht direkt ein."
+  },
+  "imagePreview": {
+    "message": "Vorschau"
+  },
+  "attachImage": {
+    "message": "Bild anhängen"
+  },
+  "copyError": {
+    "message": "Kopieren fehlgeschlagen"
+  },
+  "imageOnlyError": {
+    "message": "Es können nur Bilddateien angehängt werden."
+  },
+  "imageSizeError": {
+    "message": "Bildgröße ist zu groß (max. 5 MB)."
+  },
+  "imageReadError": {
+    "message": "Fehler beim Lesen der Bilddatei."
+  },
+  "fullscreenError": {
+    "message": "Vollbild konnte nicht umgeschaltet werden (iframe allowfullscreen erforderlich)"
+  },
+  "apiKeyInitError": {
+    "message": "Fehler bei der Initialisierung des API-Schlüssels. Bitte überprüfen Sie Ihren Schlüssel."
+  },
+  "geminiInitError": {
+    "message": "Fehler beim Initialisieren von Gemini AI. Bitte überprüfen Sie Ihren API-Schlüssel."
+  },
+  "requestingSummarize": {
+    "message": "Seitenzusammenfassung wird angefordert..."
+  },
+  "requestingPdfSummarize": {
+    "message": "PDF-Seite {page} Zusammenfassung wird angefordert..."
+  },
+  "pdfPageContentError": {
+    "message": "Kann keinen Inhalt von Seite {page} abrufen oder sie ist leer."
+  },
+  "pdfSummarizeError": {
+    "message": "Fehler beim Zusammenfassen der PDF-Seite"
+  },
+  "pageContentError": {
+    "message": "Kann Seiteninhalt nicht abrufen oder er ist leer."
+  },
+  "pageSummarizeError": {
+    "message": "Fehler beim Zusammenfassen der Seite"
+  },
+  "pdfTextSelectError": {
+    "message": "Kann keinen Text aus PDF auswählen.\n\nBitte kopieren Sie den zu übersetzenden Text und fügen Sie ihn in das Eingabefeld unten ein."
+  },
+  "translateSelectionError": {
+    "message": "Fehler beim Übersetzen des ausgewählten Textes"
+  }
+}

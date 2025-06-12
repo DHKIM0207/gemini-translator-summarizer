@@ -1,6 +1,13 @@
 import { GoogleGenerativeAI } from './lib/google-generative-ai.esm.js';
+import { initializeI18n, getMessage, getMessages } from './lib/i18n-helper.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+let currentMessages = null;
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // i18n 초기화 및 현재 언어의 메시지 로드
+  const currentLocale = await initializeI18n();
+  currentMessages = await getMessages(currentLocale);
+  
   const apiKeyInput = document.getElementById('apiKey');
   const saveKeyButton = document.getElementById('saveKey');
   const summarizeButton = document.getElementById('summarizeBtn');
@@ -43,10 +50,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiKey = apiKeyInput.value.trim();
     if (apiKey) {
       chrome.storage.local.set({ geminiApiKey: apiKey }, () => {
-        displayMessage('API 키가 저장되었습니다.', 'success');
+        displayMessage(getMessage(currentMessages, 'apiKeySaved'), 'success');
       });
     } else {
-      displayMessage('API 키를 입력해주세요.', 'error');
+      displayMessage(getMessage(currentMessages, 'errorNoApiKey'), 'error');
     }
   });
 
@@ -61,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log(`[${type.toUpperCase()}] ${message}`);
     if (type === 'error') {
       resultDiv.innerHTML = `<p class="error-message">${message}</p>`;
-    } else if (type === 'success' && resultDiv.textContent.includes('결과가 여기에 표시됩니다.')) {
+    } else if (type === 'success' && resultDiv.textContent.includes(getMessage(currentMessages, 'resultPlaceholder'))) {
       // 성공 메시지는 결과가 없을 때만 간략히 표시
       resultDiv.innerHTML = `<p>${message}</p>`;
     }
@@ -72,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function handleAction(actionType) {
     const apiKey = apiKeyInput.value.trim();
     if (!apiKey) {
-      displayMessage('오류: Gemini API 키를 먼저 입력하고 저장해주세요.', 'error');
+      displayMessage(getMessage(currentMessages, 'errorNoApiKey'), 'error');
       return;
     }
 
@@ -82,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const pageContent = await getCurrentPageContentWithReadability();
       if (!pageContent || pageContent.trim().length === 0) {
-        displayMessage('오류: 페이지 내용을 추출할 수 없거나 내용이 없습니다. 다른 페이지에서 시도해 보세요.', 'error');
+        displayMessage(getMessage(currentMessages, 'errorPageExtraction'), 'error');
         showLoader(false);
         return;
       }
@@ -91,16 +98,16 @@ document.addEventListener('DOMContentLoaded', () => {
       const targetLanguage = targetLangSelect.value;
 
       if (actionType === 'summarize') {
-        prompt = `다음 텍스트를 한국어로 핵심 내용을 중심으로 간결하게 요약해줘. 원문의 중요한 정보를 빠뜨리지 않도록 해줘. :\n\n${pageContent}`;
+        prompt = `${getMessage(currentMessages, 'summarizePrompt')}\n\n${pageContent}`;
       } else if (actionType === 'translate') {
-        prompt = `다음 텍스트를 ${targetLanguage}(으)로 번역해줘. 웹 페이지 전체 내용이므로, 문맥을 유지하고 자연스럽게 번역해줘. HTML 태그나 코드는 번역 결과에 포함하지 마.:\n\n${pageContent}`;
+        prompt = `${getMessage(currentMessages, 'translatePrompt')} ${targetLanguage}\n\n${pageContent}`;
       }
 
       await callGeminiApiStreaming(apiKey, prompt, resultDiv);
 
     } catch (error) {
       console.error('Error in handleAction:', error);
-      displayMessage(`오류 발생: ${error.message}`, 'error');
+      displayMessage(`${getMessage(currentMessages, 'errorApiCall')}: ${error.message}`, 'error');
     } finally {
       showLoader(false);
     }
@@ -110,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return new Promise((resolve, reject) => {
       chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
         if (!tabs || tabs.length === 0 || !tabs[0].id) {
-          reject(new Error("활성 탭을 찾을 수 없습니다."));
+          reject(new Error(getMessage(currentMessages, 'errorNoActiveTab') || 'No active tab found'));
           return;
         }
         const tabId = tabs[0].id;
@@ -134,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const article = new Readability(documentClone).parse();
                 return article && article.textContent ? article.textContent : document.body.innerText; // article.content는 HTML
               } catch (e) {
-                console.error("Readability 실행 중 오류:", e);
+                console.error('Readability error:', e);
                 return document.body.innerText; // 실패 시 fallback
               }
             }
@@ -205,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       if (accumulatedText.trim() === "") {
-        resultElement.textContent = "API로부터 응답을 받았으나 내용이 비어있습니다. 프롬프트를 확인하거나 다른 내용을 시도해보세요.";
+        resultElement.textContent = getMessage(currentMessages, 'errorEmptyResponse') || 'Empty response from API';
       }
 
     } catch (error) {

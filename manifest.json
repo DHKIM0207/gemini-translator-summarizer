@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Translate Chatbot Using Gemini (Gemini를 사용하는 번역 챗봇)",
+  "name": "__MSG_extensionName__",
   "version": "3.2",
-  "description": "현재 페이지와 상호작용하는 Gemini AI 챗봇입니다. 요약 및 번역 기능을 제공합니다.",
+  "description": "__MSG_extensionDescription__",
+  "default_locale": "ko",
   "permissions": [
     "scripting",
     "storage",
@@ -41,10 +42,12 @@
         "lib/marked.min.js",
         "lib/pdf.min.js",
         "lib/pdf.worker.min.js",
+        "lib/i18n-helper.js",
         "pdf_viewer/viewer.html",
         "pdf_viewer/viewer.css",
         "pdf_viewer/pdf_viewer.css",
-        "pdf_viewer/viewer.js"
+        "pdf_viewer/viewer.js",
+        "_locales/*/*.json"
       ],
       "matches": [
         "<all_urls>"

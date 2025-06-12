@@ -1,0 +1,233 @@
+{
+  "extensionName": {
+    "message": "Gemini 翻訳 & 要約ツール"
+  },
+  "extensionDescription": {
+    "message": "Google Gemini APIを使用したAI翻訳・要約ツール"
+  },
+  "apiKeyInputPlaceholder": {
+    "message": "Gemini APIキーを入力してください"
+  },
+  "saveApiKey": {
+    "message": "APIキーを保存"
+  },
+  "apiKeySaved": {
+    "message": "APIキーが保存されました。"
+  },
+  "chatbotTitle": {
+    "message": "AI翻訳＆要約"
+  },
+  "summarizePageButton": {
+    "message": "このページを要約"
+  },
+  "translatePageButton": {
+    "message": "このページを翻訳"
+  },
+  "uploadImageButton": {
+    "message": "画像をアップロード"
+  },
+  "darkModeToggle": {
+    "message": "🌙"
+  },
+  "lightModeToggle": {
+    "message": "☀️"
+  },
+  "messageInputPlaceholder": {
+    "message": "メッセージを入力..."
+  },
+  "sendButton": {
+    "message": "送信"
+  },
+  "copyButton": {
+    "message": "コピー"
+  },
+  "copiedMessage": {
+    "message": "コピーしました！"
+  },
+  "imageSelected": {
+    "message": "画像が選択されました"
+  },
+  "removeImage": {
+    "message": "画像を削除"
+  },
+  "errorNoApiKey": {
+    "message": "APIキーが設定されていません。設定でAPIキーを入力してください。"
+  },
+  "errorPageExtraction": {
+    "message": "ページコンテンツの抽出中にエラーが発生しました"
+  },
+  "errorApiCall": {
+    "message": "Gemini API呼び出し中にエラーが発生しました"
+  },
+  "errorNoSelectedText": {
+    "message": "テキストが選択されていません。"
+  },
+  "translatePrompt": {
+    "message": "次のテキストを翻訳してください："
+  },
+  "summarizePrompt": {
+    "message": "次のウェブページの内容を要約してください："
+  },
+  "pdfTranslatePrompt": {
+    "message": "次のPDFテキストを翻訳してください："
+  },
+  "imageAnalyzePrompt": {
+    "message": "この画像を分析して説明してください。"
+  },
+  "generalPromptPrefix": {
+    "message": "日本語で答えてください。"
+  },
+  "loadingMessage": {
+    "message": "少々お待ちください..."
+  },
+  "pdfViewerTitle": {
+    "message": "PDFビューア"
+  },
+  "translateSelectedText": {
+    "message": "選択したテキストを翻訳"
+  },
+  "aiAssistant": {
+    "message": "AIアシスタント"
+  },
+  "newConversation": {
+    "message": "新しい会話"
+  },
+  "targetLanguage": {
+    "message": "翻訳対象言語"
+  },
+  "langKorean": {
+    "message": "韓国語"
+  },
+  "langEnglish": {
+    "message": "英語"
+  },
+  "langJapanese": {
+    "message": "日本語"
+  },
+  "langChinese": {
+    "message": "中国語（簡体）"
+  },
+  "langSpanish": {
+    "message": "スペイン語"
+  },
+  "langFrench": {
+    "message": "フランス語"
+  },
+  "langGerman": {
+    "message": "ドイツ語"
+  },
+  "langVietnamese": {
+    "message": "ベトナム語"
+  },
+  "summarizeButton": {
+    "message": "ページ要約"
+  },
+  "translateButton": {
+    "message": "ページ翻訳"
+  },
+  "resultPlaceholder": {
+    "message": "結果がここに表示されます。"
+  },
+  "errorNoActiveTab": {
+    "message": "アクティブなタブが見つかりません。"
+  },
+  "errorEmptyResponse": {
+    "message": "APIから空の応答を受け取りました。プロンプトを確認するか、別のコンテンツを試してください。"
+  },
+  "languageChanged": {
+    "message": "言語が変更されました。ページを更新すると適用されます。"
+  },
+  "languageSettings": {
+    "message": "言語設定"
+  },
+  "selectLanguage": {
+    "message": "言語選択"
+  },
+  "fullscreen": {
+    "message": "フルスクリーン"
+  },
+  "fullscreenExit": {
+    "message": "フルスクリーン終了"
+  },
+  "themeToggle": {
+    "message": "テーマ変更"
+  },
+  "settings": {
+    "message": "設定"
+  },
+  "closeChatbot": {
+    "message": "チャットボットを閉じる"
+  },
+  "apiKeySettings": {
+    "message": "APIキー設定"
+  },
+  "fontSettings": {
+    "message": "フォント設定"
+  },
+  "selectFont": {
+    "message": "フォント選択"
+  },
+  "defaultFont": {
+    "message": "デフォルトフォント"
+  },
+  "fontSize": {
+    "message": "フォントサイズ"
+  },
+  "saveFontSettings": {
+    "message": "フォント設定を保存"
+  },
+  "welcomeMessage": {
+    "message": "こんにちは！何かお手伝いできることはありますか？ページ全体については「ページ要約」または「ページ翻訳」ボタンを、選択したテキストについては「選択テキスト翻訳」ボタンを使用するか、直接メッセージを入力してください。"
+  },
+  "imagePreview": {
+    "message": "プレビュー"
+  },
+  "attachImage": {
+    "message": "画像を添付"
+  },
+  "copyError": {
+    "message": "コピーに失敗しました"
+  },
+  "imageOnlyError": {
+    "message": "画像ファイルのみ添付できます。"
+  },
+  "imageSizeError": {
+    "message": "画像サイズが大きすぎます（最大5MB）。"
+  },
+  "imageReadError": {
+    "message": "画像ファイルの読み込み中にエラーが発生しました。"
+  },
+  "fullscreenError": {
+    "message": "フルスクリーンの切り替えに失敗しました（iframe allowfullscreen属性が必要）"
+  },
+  "apiKeyInitError": {
+    "message": "APIキーの初期化中にエラーが発生しました。キーを確認してください。"
+  },
+  "geminiInitError": {
+    "message": "Gemini AIの初期化に失敗しました。APIキーを確認してください。"
+  },
+  "requestingSummarize": {
+    "message": "ページの要約をリクエストしています..."
+  },
+  "requestingPdfSummarize": {
+    "message": "PDF {page}ページの要約をリクエストしています..."
+  },
+  "pdfPageContentError": {
+    "message": "{page}ページのコンテンツを取得できないか、空です。"
+  },
+  "pdfSummarizeError": {
+    "message": "PDFページの要約中にエラー"
+  },
+  "pageContentError": {
+    "message": "現在のページのコンテンツを取得できないか、空です。"
+  },
+  "pageSummarizeError": {
+    "message": "ページの要約中にエラー"
+  },
+  "pdfTextSelectError": {
+    "message": "PDFからテキストを選択できません。\n\n翻訳したいテキストを下の入力欄に直接コピーして貼り付けて送信してください。"
+  },
+  "translateSelectionError": {
+    "message": "選択テキストの翻訳中にエラー"
+  }
+}

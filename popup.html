@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Gemini 도우미 v2</title>
+    <title>Gemini Translator & Summarizer</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet"
@@ -323,27 +323,27 @@
 
 <body>
     <div class="container">
-        <button class="icon-button" id="infoBtn" title="정보">
+        <button class="icon-button" id="infoBtn" title="Info">
             <span class="material-symbols-rounded">info</span>
         </button>
 
-        <button class="icon-button theme-toggle" id="themeToggle" title="테마 변경" style="left: 1rem; right: auto;">
+        <button class="icon-button theme-toggle" id="themeToggle" title="Theme" style="left: 1rem; right: auto;">
             <span class="material-symbols-rounded">dark_mode</span>
         </button>
 
         <div class="header">
-            <h1>Gemini 도우미 v2</h1>
+            <h1 data-i18n="extensionName">Gemini Translator & Summarizer</h1>
         </div>
 
         <div class="form-group">
             <label for="apiKey">
                 <span class="material-symbols-rounded">key</span>
-                Gemini API 키
+                <span data-i18n="saveApiKey">Gemini API Key</span>
             </label>
-            <input type="password" id="apiKey" placeholder="API 키를 입력하세요">
+            <input type="password" id="apiKey" data-i18n-placeholder="apiKeyInputPlaceholder" placeholder="Enter your Gemini API key">
             <button id="saveKey">
                 <span class="material-symbols-rounded">save</span>
-                키 저장
+                <span data-i18n="saveApiKey">Save API Key</span>
             </button>
         </div>
 
@@ -352,33 +352,33 @@
         <div class="form-group">
             <label for="targetLang">
                 <span class="material-symbols-rounded">translate</span>
-                번역 대상 언어
+                <span data-i18n="targetLanguage">Target Language</span>
             </label>
             <select id="targetLang">
-                <option value="Korean">한국어</option>
-                <option value="English">영어</option>
-                <option value="Japanese">일본어</option>
-                <option value="Chinese">중국어 (간체)</option>
-                <option value="Spanish">스페인어</option>
-                <option value="French">프랑스어</option>
-                <option value="German">독일어</option>
-                <option value="Vietnamese">베트남어</option>
+                <option value="Korean" data-i18n="langKorean">Korean</option>
+                <option value="English" data-i18n="langEnglish">English</option>
+                <option value="Japanese" data-i18n="langJapanese">Japanese</option>
+                <option value="Chinese" data-i18n="langChinese">Chinese (Simplified)</option>
+                <option value="Spanish" data-i18n="langSpanish">Spanish</option>
+                <option value="French" data-i18n="langFrench">French</option>
+                <option value="German" data-i18n="langGerman">German</option>
+                <option value="Vietnamese" data-i18n="langVietnamese">Vietnamese</option>
             </select>
         </div>
 
         <div class="action-buttons">
             <button id="summarizeBtn">
                 <span class="material-symbols-rounded">summarize</span>
-                페이지 요약
+                <span data-i18n="summarizeButton">Summarize Page</span>
             </button>
             <button id="translateBtn">
                 <span class="material-symbols-rounded">translate</span>
-                페이지 번역
+                <span data-i18n="translateButton">Translate Page</span>
             </button>
         </div>
 
         <div class="loader" id="loader"></div>
-        <div id="result-container">결과가 여기에 표시됩니다.</div>
+        <div id="result-container" data-i18n="resultPlaceholder">Results will appear here.</div>
     </div>
 
     <script type="module" src="popup.js"></script>

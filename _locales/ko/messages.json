@@ -1,0 +1,233 @@
+{
+  "extensionName": {
+    "message": "Gemini 번역기 & 요약기"
+  },
+  "extensionDescription": {
+    "message": "Google Gemini API를 사용한 AI 기반 번역 및 요약 도구"
+  },
+  "apiKeyInputPlaceholder": {
+    "message": "Gemini API 키를 입력하세요"
+  },
+  "saveApiKey": {
+    "message": "API 키 저장"
+  },
+  "apiKeySaved": {
+    "message": "API 키가 저장되었습니다."
+  },
+  "chatbotTitle": {
+    "message": "AI 번역 & 요약"
+  },
+  "summarizePageButton": {
+    "message": "이 페이지 요약"
+  },
+  "translatePageButton": {
+    "message": "이 페이지 번역"
+  },
+  "uploadImageButton": {
+    "message": "이미지 업로드"
+  },
+  "darkModeToggle": {
+    "message": "🌙"
+  },
+  "lightModeToggle": {
+    "message": "☀️"
+  },
+  "messageInputPlaceholder": {
+    "message": "메시지를 입력하세요..."
+  },
+  "sendButton": {
+    "message": "전송"
+  },
+  "copyButton": {
+    "message": "복사"
+  },
+  "copiedMessage": {
+    "message": "복사됨!"
+  },
+  "imageSelected": {
+    "message": "이미지가 선택되었습니다"
+  },
+  "removeImage": {
+    "message": "이미지 제거"
+  },
+  "errorNoApiKey": {
+    "message": "API 키가 설정되지 않았습니다. 설정에서 API 키를 입력해주세요."
+  },
+  "errorPageExtraction": {
+    "message": "페이지 내용 추출 중 오류 발생"
+  },
+  "errorApiCall": {
+    "message": "Gemini API 호출 중 오류 발생"
+  },
+  "errorNoSelectedText": {
+    "message": "선택한 텍스트가 없습니다."
+  },
+  "translatePrompt": {
+    "message": "다음 텍스트를 한국어로 번역해주세요:"
+  },
+  "summarizePrompt": {
+    "message": "다음 웹페이지 내용을 한국어로 요약해주세요:"
+  },
+  "pdfTranslatePrompt": {
+    "message": "다음 PDF 텍스트를 한국어로 번역해주세요:"
+  },
+  "imageAnalyzePrompt": {
+    "message": "이 이미지를 분석하고 한국어로 설명해주세요."
+  },
+  "generalPromptPrefix": {
+    "message": "한국어로 답변해주세요."
+  },
+  "loadingMessage": {
+    "message": "잠시만 기다려주세요..."
+  },
+  "pdfViewerTitle": {
+    "message": "PDF 뷰어"
+  },
+  "translateSelectedText": {
+    "message": "선택한 텍스트 번역"
+  },
+  "aiAssistant": {
+    "message": "AI 어시스턴트"
+  },
+  "newConversation": {
+    "message": "새 대화"
+  },
+  "targetLanguage": {
+    "message": "번역 대상 언어"
+  },
+  "langKorean": {
+    "message": "한국어"
+  },
+  "langEnglish": {
+    "message": "영어"
+  },
+  "langJapanese": {
+    "message": "일본어"
+  },
+  "langChinese": {
+    "message": "중국어 (간체)"
+  },
+  "langSpanish": {
+    "message": "스페인어"
+  },
+  "langFrench": {
+    "message": "프랑스어"
+  },
+  "langGerman": {
+    "message": "독일어"
+  },
+  "langVietnamese": {
+    "message": "베트남어"
+  },
+  "summarizeButton": {
+    "message": "페이지 요약"
+  },
+  "translateButton": {
+    "message": "페이지 번역"
+  },
+  "resultPlaceholder": {
+    "message": "결과가 여기에 표시됩니다."
+  },
+  "errorNoActiveTab": {
+    "message": "활성 탭을 찾을 수 없습니다."
+  },
+  "errorEmptyResponse": {
+    "message": "API로부터 응답을 받았으나 내용이 비어있습니다. 프롬프트를 확인하거나 다른 내용을 시도해보세요."
+  },
+  "languageChanged": {
+    "message": "언어가 변경되었습니다. 페이지를 새로고침하면 적용됩니다."
+  },
+  "languageSettings": {
+    "message": "언어 설정"
+  },
+  "selectLanguage": {
+    "message": "언어 선택"
+  },
+  "fullscreen": {
+    "message": "전체 화면"
+  },
+  "fullscreenExit": {
+    "message": "전체 화면 종료"
+  },
+  "themeToggle": {
+    "message": "테마 변경"
+  },
+  "settings": {
+    "message": "설정"
+  },
+  "closeChatbot": {
+    "message": "챗봇 닫기"
+  },
+  "apiKeySettings": {
+    "message": "API 키 설정"
+  },
+  "fontSettings": {
+    "message": "폰트 설정"
+  },
+  "selectFont": {
+    "message": "폰트 선택"
+  },
+  "defaultFont": {
+    "message": "기본 폰트"
+  },
+  "fontSize": {
+    "message": "폰트 크기"
+  },
+  "saveFontSettings": {
+    "message": "폰트 설정 저장"
+  },
+  "welcomeMessage": {
+    "message": "안녕하세요! 무엇을 도와드릴까요? 페이지 전체에 대해서는 '페이지 요약' 또는 '페이지 번역' 버튼을, 선택한 텍스트에 대해서는 '선택 영역 번역' 버튼을 사용하거나, 직접 메시지를 입력해주세요."
+  },
+  "imagePreview": {
+    "message": "미리보기"
+  },
+  "attachImage": {
+    "message": "이미지 첨부"
+  },
+  "copyError": {
+    "message": "복사에 실패했습니다"
+  },
+  "imageOnlyError": {
+    "message": "이미지 파일만 첨부할 수 있습니다."
+  },
+  "imageSizeError": {
+    "message": "이미지 크기가 너무 큽니다 (최대 5MB)."
+  },
+  "imageReadError": {
+    "message": "이미지 파일을 읽는 중 오류가 발생했습니다."
+  },
+  "fullscreenError": {
+    "message": "풀스크린 전환에 실패했습니다. (iframe allowfullscreen 속성 필요)"
+  },
+  "apiKeyInitError": {
+    "message": "API 키 초기화 중 오류 발생. 키를 확인해주세요."
+  },
+  "geminiInitError": {
+    "message": "Gemini AI 초기화 실패. API 키를 확인해주세요."
+  },
+  "requestingSummarize": {
+    "message": "페이지 내용 요약을 요청합니다..."
+  },
+  "requestingPdfSummarize": {
+    "message": "PDF {page}페이지 내용 요약을 요청합니다..."
+  },
+  "pdfPageContentError": {
+    "message": "{page}페이지의 내용을 가져올 수 없거나 내용이 없습니다."
+  },
+  "pdfSummarizeError": {
+    "message": "PDF 페이지 요약 중 오류"
+  },
+  "pageContentError": {
+    "message": "현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다."
+  },
+  "pageSummarizeError": {
+    "message": "페이지 요약 중 오류"
+  },
+  "pdfTextSelectError": {
+    "message": "PDF에서 텍스트를 선택할 수 없습니다.\n\n번역하려는 텍스트를 아래 입력창에 직접 복사하여 붙여넣고 전송해주세요."
+  },
+  "translateSelectionError": {
+    "message": "선택 영역 번역 중 오류"
+  }
+}

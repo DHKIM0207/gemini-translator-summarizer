@@ -1,0 +1,233 @@
+{
+  "extensionName": {
+    "message": "Gemini Translator & Summarizer"
+  },
+  "extensionDescription": {
+    "message": "AI-powered translation and summarization tool using Google Gemini API"
+  },
+  "apiKeyInputPlaceholder": {
+    "message": "Enter your Gemini API key"
+  },
+  "saveApiKey": {
+    "message": "Save API Key"
+  },
+  "apiKeySaved": {
+    "message": "API key saved successfully."
+  },
+  "chatbotTitle": {
+    "message": "AI Translation & Summary"
+  },
+  "summarizePageButton": {
+    "message": "Summarize This Page"
+  },
+  "translatePageButton": {
+    "message": "Translate This Page"
+  },
+  "uploadImageButton": {
+    "message": "Upload Image"
+  },
+  "darkModeToggle": {
+    "message": "🌙"
+  },
+  "lightModeToggle": {
+    "message": "☀️"
+  },
+  "messageInputPlaceholder": {
+    "message": "Enter your message..."
+  },
+  "sendButton": {
+    "message": "Send"
+  },
+  "copyButton": {
+    "message": "Copy"
+  },
+  "copiedMessage": {
+    "message": "Copied!"
+  },
+  "imageSelected": {
+    "message": "Image selected"
+  },
+  "removeImage": {
+    "message": "Remove image"
+  },
+  "errorNoApiKey": {
+    "message": "API key not set. Please enter your API key in settings."
+  },
+  "errorPageExtraction": {
+    "message": "Error extracting page content"
+  },
+  "errorApiCall": {
+    "message": "Error calling Gemini API"
+  },
+  "errorNoSelectedText": {
+    "message": "No text selected."
+  },
+  "translatePrompt": {
+    "message": "Please translate the following text:"
+  },
+  "summarizePrompt": {
+    "message": "Please summarize the following webpage content:"
+  },
+  "pdfTranslatePrompt": {
+    "message": "Please translate the following PDF text:"
+  },
+  "imageAnalyzePrompt": {
+    "message": "Please analyze this image and explain."
+  },
+  "generalPromptPrefix": {
+    "message": "Please respond in English."
+  },
+  "loadingMessage": {
+    "message": "Please wait..."
+  },
+  "pdfViewerTitle": {
+    "message": "PDF Viewer"
+  },
+  "translateSelectedText": {
+    "message": "Translate Selected Text"
+  },
+  "aiAssistant": {
+    "message": "AI Assistant"
+  },
+  "newConversation": {
+    "message": "New Conversation"
+  },
+  "targetLanguage": {
+    "message": "Target Language"
+  },
+  "langKorean": {
+    "message": "Korean"
+  },
+  "langEnglish": {
+    "message": "English"
+  },
+  "langJapanese": {
+    "message": "Japanese"
+  },
+  "langChinese": {
+    "message": "Chinese (Simplified)"
+  },
+  "langSpanish": {
+    "message": "Spanish"
+  },
+  "langFrench": {
+    "message": "French"
+  },
+  "langGerman": {
+    "message": "German"
+  },
+  "langVietnamese": {
+    "message": "Vietnamese"
+  },
+  "summarizeButton": {
+    "message": "Summarize Page"
+  },
+  "translateButton": {
+    "message": "Translate Page"
+  },
+  "resultPlaceholder": {
+    "message": "Results will appear here."
+  },
+  "errorNoActiveTab": {
+    "message": "No active tab found."
+  },
+  "errorEmptyResponse": {
+    "message": "Received empty response from API. Please check your prompt or try different content."
+  },
+  "languageChanged": {
+    "message": "Language changed. Refresh the page to apply."
+  },
+  "languageSettings": {
+    "message": "Language Settings"
+  },
+  "selectLanguage": {
+    "message": "Select Language"
+  },
+  "fullscreen": {
+    "message": "Fullscreen"
+  },
+  "fullscreenExit": {
+    "message": "Exit Fullscreen"
+  },
+  "themeToggle": {
+    "message": "Toggle Theme"
+  },
+  "settings": {
+    "message": "Settings"
+  },
+  "closeChatbot": {
+    "message": "Close Chatbot"
+  },
+  "apiKeySettings": {
+    "message": "API Key Settings"
+  },
+  "fontSettings": {
+    "message": "Font Settings"
+  },
+  "selectFont": {
+    "message": "Select Font"
+  },
+  "defaultFont": {
+    "message": "Default Font"
+  },
+  "fontSize": {
+    "message": "Font Size"
+  },
+  "saveFontSettings": {
+    "message": "Save Font Settings"
+  },
+  "welcomeMessage": {
+    "message": "Hello! How can I help you? Use the 'Summarize Page' or 'Translate Page' buttons for the entire page, 'Translate Selected' button for selected text, or type your message directly."
+  },
+  "imagePreview": {
+    "message": "Preview"
+  },
+  "attachImage": {
+    "message": "Attach Image"
+  },
+  "copyError": {
+    "message": "Copy failed"
+  },
+  "imageOnlyError": {
+    "message": "Only image files can be attached."
+  },
+  "imageSizeError": {
+    "message": "Image size is too large (max 5MB)."
+  },
+  "imageReadError": {
+    "message": "Error reading image file."
+  },
+  "fullscreenError": {
+    "message": "Failed to toggle fullscreen (iframe allowfullscreen required)"
+  },
+  "apiKeyInitError": {
+    "message": "Error initializing API key. Please check your key."
+  },
+  "geminiInitError": {
+    "message": "Failed to initialize Gemini AI. Please check your API key."
+  },
+  "requestingSummarize": {
+    "message": "Requesting page summary..."
+  },
+  "requestingPdfSummarize": {
+    "message": "Requesting PDF page {page} summary..."
+  },
+  "pdfPageContentError": {
+    "message": "Cannot get content from page {page} or it's empty."
+  },
+  "pdfSummarizeError": {
+    "message": "Error summarizing PDF page"
+  },
+  "pageContentError": {
+    "message": "Cannot get page content or it's empty."
+  },
+  "pageSummarizeError": {
+    "message": "Error summarizing page"
+  },
+  "pdfTextSelectError": {
+    "message": "Cannot select text from PDF.\n\nPlease copy and paste the text to translate in the input field below."
+  },
+  "translateSelectionError": {
+    "message": "Error translating selected text"
+  }
+}

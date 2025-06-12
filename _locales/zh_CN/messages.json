@@ -1,0 +1,233 @@
+{
+  "extensionName": {
+    "message": "Gemini 翻译器和摘要工具"
+  },
+  "extensionDescription": {
+    "message": "使用Google Gemini API的AI翻译和摘要工具"
+  },
+  "apiKeyInputPlaceholder": {
+    "message": "请输入您的Gemini API密钥"
+  },
+  "saveApiKey": {
+    "message": "保存API密钥"
+  },
+  "apiKeySaved": {
+    "message": "API密钥已保存。"
+  },
+  "chatbotTitle": {
+    "message": "AI翻译与摘要"
+  },
+  "summarizePageButton": {
+    "message": "总结此页面"
+  },
+  "translatePageButton": {
+    "message": "翻译此页面"
+  },
+  "uploadImageButton": {
+    "message": "上传图片"
+  },
+  "darkModeToggle": {
+    "message": "🌙"
+  },
+  "lightModeToggle": {
+    "message": "☀️"
+  },
+  "messageInputPlaceholder": {
+    "message": "输入您的消息..."
+  },
+  "sendButton": {
+    "message": "发送"
+  },
+  "copyButton": {
+    "message": "复制"
+  },
+  "copiedMessage": {
+    "message": "已复制！"
+  },
+  "imageSelected": {
+    "message": "图片已选择"
+  },
+  "removeImage": {
+    "message": "删除图片"
+  },
+  "errorNoApiKey": {
+    "message": "未设置API密钥。请在设置中输入您的API密钥。"
+  },
+  "errorPageExtraction": {
+    "message": "提取页面内容时出错"
+  },
+  "errorApiCall": {
+    "message": "调用Gemini API时出错"
+  },
+  "errorNoSelectedText": {
+    "message": "未选择文本。"
+  },
+  "translatePrompt": {
+    "message": "请翻译以下文本："
+  },
+  "summarizePrompt": {
+    "message": "请总结以下网页内容："
+  },
+  "pdfTranslatePrompt": {
+    "message": "请翻译以下PDF文本："
+  },
+  "imageAnalyzePrompt": {
+    "message": "请分析这张图片并说明。"
+  },
+  "generalPromptPrefix": {
+    "message": "请用中文回答。"
+  },
+  "loadingMessage": {
+    "message": "请稍候..."
+  },
+  "pdfViewerTitle": {
+    "message": "PDF查看器"
+  },
+  "translateSelectedText": {
+    "message": "翻译选中的文本"
+  },
+  "aiAssistant": {
+    "message": "AI助手"
+  },
+  "newConversation": {
+    "message": "新对话"
+  },
+  "targetLanguage": {
+    "message": "翻译目标语言"
+  },
+  "langKorean": {
+    "message": "韩语"
+  },
+  "langEnglish": {
+    "message": "英语"
+  },
+  "langJapanese": {
+    "message": "日语"
+  },
+  "langChinese": {
+    "message": "中文（简体）"
+  },
+  "langSpanish": {
+    "message": "西班牙语"
+  },
+  "langFrench": {
+    "message": "法语"
+  },
+  "langGerman": {
+    "message": "德语"
+  },
+  "langVietnamese": {
+    "message": "越南语"
+  },
+  "summarizeButton": {
+    "message": "页面摘要"
+  },
+  "translateButton": {
+    "message": "页面翻译"
+  },
+  "resultPlaceholder": {
+    "message": "结果将显示在这里。"
+  },
+  "errorNoActiveTab": {
+    "message": "未找到活动标签页。"
+  },
+  "errorEmptyResponse": {
+    "message": "从API收到空响应。请检查您的提示或尝试不同的内容。"
+  },
+  "languageChanged": {
+    "message": "语言已更改。刷新页面以应用。"
+  },
+  "languageSettings": {
+    "message": "语言设置"
+  },
+  "selectLanguage": {
+    "message": "选择语言"
+  },
+  "fullscreen": {
+    "message": "全屏"
+  },
+  "fullscreenExit": {
+    "message": "退出全屏"
+  },
+  "themeToggle": {
+    "message": "切换主题"
+  },
+  "settings": {
+    "message": "设置"
+  },
+  "closeChatbot": {
+    "message": "关闭聊天机器人"
+  },
+  "apiKeySettings": {
+    "message": "API密钥设置"
+  },
+  "fontSettings": {
+    "message": "字体设置"
+  },
+  "selectFont": {
+    "message": "选择字体"
+  },
+  "defaultFont": {
+    "message": "默认字体"
+  },
+  "fontSize": {
+    "message": "字体大小"
+  },
+  "saveFontSettings": {
+    "message": "保存字体设置"
+  },
+  "welcomeMessage": {
+    "message": "您好！有什么可以帮助您的吗？对于整个页面，请使用\"页面摘要\"或\"页面翻译\"按钮，对于选定的文本，请使用\"翻译选中文本\"按钮，或直接输入您的消息。"
+  },
+  "imagePreview": {
+    "message": "预览"
+  },
+  "attachImage": {
+    "message": "附加图片"
+  },
+  "copyError": {
+    "message": "复制失败"
+  },
+  "imageOnlyError": {
+    "message": "只能附加图片文件。"
+  },
+  "imageSizeError": {
+    "message": "图片大小太大（最大5MB）。"
+  },
+  "imageReadError": {
+    "message": "读取图片文件时出错。"
+  },
+  "fullscreenError": {
+    "message": "切换全屏失败（需要iframe allowfullscreen属性）"
+  },
+  "apiKeyInitError": {
+    "message": "初始化API密钥时出错。请检查您的密钥。"
+  },
+  "geminiInitError": {
+    "message": "初始化Gemini AI失败。请检查您的API密钥。"
+  },
+  "requestingSummarize": {
+    "message": "正在请求页面摘要..."
+  },
+  "requestingPdfSummarize": {
+    "message": "正在请求PDF第{page}页摘要..."
+  },
+  "pdfPageContentError": {
+    "message": "无法获取第{page}页内容或内容为空。"
+  },
+  "pdfSummarizeError": {
+    "message": "摘要PDF页面时出错"
+  },
+  "pageContentError": {
+    "message": "无法获取当前页面内容或内容为空。"
+  },
+  "pageSummarizeError": {
+    "message": "摘要页面时出错"
+  },
+  "pdfTextSelectError": {
+    "message": "无法从 PDF 中选择文本。\n\n请将要翻译的文本直接复制并粘贴到下方输入框中发送。"
+  },
+  "translateSelectionError": {
+    "message": "翻译选中文本时出错"
+  }
+}

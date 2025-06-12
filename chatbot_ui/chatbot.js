@@ -2,6 +2,9 @@
 
 // GoogleGenerativeAI import 경로 수정
 import { GoogleGenerativeAI } from '../lib/google-generative-ai.esm.js';
+import { initializeI18n, getMessage, getMessages, applyI18n } from '../lib/i18n-helper.js';
+
+let currentMessages = null;
 
 const settingsBtn = document.getElementById('settings-btn');
 const apiKeySection = document.getElementById('api-key-section');
@@ -36,6 +39,10 @@ const fontSelect = document.getElementById('fontSelect');
 const fontSizeSlider = document.getElementById('fontSizeSlider');
 const fontSizeValue = document.getElementById('fontSizeValue');
 const saveFontSettingsBtn = document.getElementById('saveFontSettingsBtn');
+
+// 언어 설정 관련 요소
+const languageSelect = document.getElementById('languageSelect');
+const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 
 let currentApiKey = null;
 let attachedImage = null;
@@ -79,8 +86,12 @@ const koreanFonts = [
   { name: 'Noto Serif KR', value: 'Noto Serif KR' }
 ];
 
-function initializeChatbot() {
-  chrome.storage.local.get(['geminiApiKey', 'theme', 'fontFamily', 'fontSize'], (result) => {
+async function initializeChatbot() {
+  // i18n 초기화 및 현재 언어의 메시지 로드
+  const currentLocale = await initializeI18n();
+  currentMessages = await getMessages(currentLocale);
+  
+  chrome.storage.local.get(['geminiApiKey', 'theme', 'fontFamily', 'fontSize', 'language'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
       currentApiKey = result.geminiApiKey;
@@ -108,6 +119,16 @@ function initializeChatbot() {
       applyFontSize(result.fontSize);
     }
     
+    // 언어 설정 로드
+    if (result.language) {
+      languageSelect.value = result.language;
+    } else {
+      // 기본값으로 브라우저 언어 사용
+      const browserLang = chrome.i18n.getUILanguage();
+      const langCode = browserLang.startsWith('zh') ? 'zh_CN' : browserLang.substring(0, 2);
+      languageSelect.value = ['ko', 'en', 'ja', 'zh_CN', 'de', 'es', 'fr'].includes(langCode) ? langCode : 'ko';
+    }
+    
     // 폰트 목록 초기화
     initializeFontList();
   });
@@ -117,11 +138,14 @@ function initializeChatbot() {
   settingsBtn.addEventListener('click', toggleApiKeySection);
   saveApiKeyBtn.addEventListener('click', saveApiKey);
   closeChatbotBtn.addEventListener('click', closeChatbot);
+  closeSettingsBtn.addEventListener('click', () => {
+    apiKeySection.classList.add('hidden');
+  });
   themeToggleBtn.addEventListener('click', toggleTheme);
 
   summarizePageBtn.addEventListener('click', handleSummarizePage);
   translatePageBtn.addEventListener('click', handleTranslatePage);
-  translateSelectionBtn.addEventListener('click', handleTranslateSelectedText);
+  translateSelectionBtn.addEventListener('click', () => handleTranslateSelectedText());
 
   imageUploadBtn.addEventListener('click', () => imageFileInput.click());
   imageFileInput.addEventListener('change', handleImageUpload);
@@ -139,6 +163,31 @@ function initializeChatbot() {
   });
   
   saveFontSettingsBtn.addEventListener('click', saveFontSettings);
+  
+  // 언어 설정 이벤트 리스너
+  languageSelect.addEventListener('change', async (e) => {
+    const selectedLang = e.target.value;
+    
+    // 먼저 새로운 언어 메시지를 로드
+    const newMessages = await getMessages(selectedLang);
+    currentMessages = newMessages;
+    
+    // 저장하고 UI 업데이트
+    chrome.storage.local.set({ language: selectedLang }, () => {
+      // 새로운 언어로 UI 업데이트
+      applyI18n(selectedLang);
+      
+      // 폰트 목록도 업데이트
+      initializeFontList();
+      
+      // 언어 변경 알림 (새 언어로 표시)
+      apiKeyMsg.textContent = getMessage(currentMessages, 'languageChanged');
+      apiKeyMsg.style.color = '#10b981';
+      setTimeout(() => {
+        apiKeyMsg.textContent = '';
+      }, 3000);
+    });
+  });
 
   sendBtn.addEventListener('click', () => {
     sendMessage();
@@ -194,7 +243,7 @@ function initializeGenAI() {
       genAI = new GoogleGenerativeAI(currentApiKey);
     } catch (error) {
       console.error("Error initializing GoogleGenerativeAI:", error);
-      apiKeyMsg.textContent = 'API 키 초기화 중 오류 발생. 키를 확인해주세요.';
+      apiKeyMsg.textContent = getMessage(currentMessages, 'apiKeyInitError') || 'Error initializing API key. Please check your key.';
       apiKeyMsg.style.color = '#ef4444';
       currentApiKey = null;
       genAI = null;
@@ -206,14 +255,14 @@ function initializeGenAI() {
 
 function startNewChatSession(history = []) {
   if (!currentApiKey) {
-    addMessageToUI("API 키가 설정되지 않았습니다. 설정에서 API 키를 먼저 저장해주세요.", false, true);
+    addMessageToUI(getMessage(currentMessages, 'errorNoApiKey'), false, true);
     apiKeySection.classList.remove('hidden');
     return false;
   }
   if (!genAI) {
     initializeGenAI();
     if (!genAI) {
-      addMessageToUI("Gemini AI 초기화 실패. API 키를 확인해주세요.", false, true);
+      addMessageToUI(getMessage(currentMessages, 'geminiInitError') || 'Failed to initialize Gemini AI. Please check your API key.', false, true);
       return false;
     }
   }
@@ -241,14 +290,14 @@ function startNewChatSession(history = []) {
 function saveApiKey() {
   const apiKey = apiKeyInput.value.trim();
   if (!apiKey) {
-    apiKeyMsg.textContent = 'API 키를 입력해주세요.';
+    apiKeyMsg.textContent = getMessage(currentMessages, 'errorNoApiKey');
     apiKeyMsg.style.color = '#ef4444';
     return;
   }
 
   currentApiKey = apiKey;
   chrome.storage.local.set({ 'geminiApiKey': apiKey }, () => {
-    apiKeyMsg.textContent = 'API 키가 성공적으로 저장되었습니다.';
+    apiKeyMsg.textContent = getMessage(currentMessages, 'apiKeySaved');
     apiKeyMsg.style.color = '#10b981';
     initializeGenAI();
     if (startNewChatSession()) {
@@ -398,37 +447,37 @@ async function handleSummarizePage() {
     // PDF 뷰어 페이지인 경우 현재 페이지 요약
     const currentPage = pdfInfo.currentPage;
     
-    addMessageToUI(`PDF ${currentPage}페이지 내용 요약을 요청합니다...`, true);
+    addMessageToUI(getMessage(currentMessages, 'requestingPdfSummarize').replace('{page}', currentPage) || `Requesting PDF page ${currentPage} summary...`, true);
     loader.classList.remove('hidden');
     
     try {
       const pageContent = await getPdfPageContent(currentPage);
       if (!pageContent || pageContent.trim().length === 0) {
-        addMessageToUI(`${currentPage}페이지의 내용을 가져올 수 없거나 내용이 없습니다.`, false, true);
+        addMessageToUI(getMessage(currentMessages, 'pdfPageContentError').replace('{page}', currentPage) || `Cannot get content from page ${currentPage} or it's empty.`, false, true);
         loader.classList.add('hidden');
         return;
       }
-      const prompt = `다음은 PDF ${currentPage}페이지의 내용이야. 한국어로 핵심 내용을 중심으로 간결하게 요약해줘:\n\n${pageContent}`;
+      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} ${getMessage(currentMessages, 'summarizePrompt')}\n\nPDF Page ${currentPage}:\n${pageContent}`;
       await streamResponse(prompt);
     } catch (error) {
-      addMessageToUI("PDF 페이지 요약 중 오류: " + error.message, false, true);
+      addMessageToUI(getMessage(currentMessages, 'pdfSummarizeError') + ': ' + error.message, false, true);
       loader.classList.add('hidden');
     }
   } else {
     // 일반 웹페이지인 경우 기존 로직 유지
-    addMessageToUI("페이지 내용 요약을 요청합니다...", true);
+    addMessageToUI(getMessage(currentMessages, 'requestingSummarize') || 'Requesting page summary...', true);
     loader.classList.remove('hidden');
     try {
       const pageContent = await getPageContentForChat();
       if (!pageContent || pageContent.trim().length === 0) {
-        addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+        addMessageToUI(getMessage(currentMessages, 'pageContentError'), false, true);
         loader.classList.add('hidden');
         return;
       }
-      const prompt = `다음 텍스트를 한국어로 핵심 내용을 중심으로 간결하게 요약해줘:\n\n${pageContent}`;
+      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} ${getMessage(currentMessages, 'summarizePrompt')}\n\n${pageContent}`;
       await streamResponse(prompt);
     } catch (error) {
-      addMessageToUI("페이지 요약 중 오류: " + error.message, false, true);
+      addMessageToUI(getMessage(currentMessages, 'pageSummarizeError') + ': ' + error.message, false, true);
       loader.classList.add('hidden');
     }
   }
@@ -450,12 +499,11 @@ async function handleTranslatePage() {
     try {
       const pageContent = await getPdfPageContent(currentPage);
       if (!pageContent || pageContent.trim().length === 0) {
-        addMessageToUI(`${currentPage}페이지의 내용을 가져올 수 없거나 내용이 없습니다.`, false, true);
+        addMessageToUI(getMessage(currentMessages, 'pdfPageContentError').replace('{page}', currentPage) || `Cannot get content from page ${currentPage} or it's empty.`, false, true);
         loader.classList.add('hidden');
         return;
       }
-      const targetLanguage = "한국어";
-      const prompt = `다음 텍스트는 PDF ${currentPage}페이지의 내용이야. 이 내용을 ${targetLanguage}(으)로 자연스럽게 번역해줘:\n\n${pageContent}`;
+      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} ${getMessage(currentMessages, 'pdfTranslatePrompt')}\n\nPDF Page ${currentPage}:\n${pageContent}`;
       await streamResponse(prompt);
     } catch (error) {
       addMessageToUI("PDF 페이지 번역 중 오류: " + error.message, false, true);
@@ -463,17 +511,16 @@ async function handleTranslatePage() {
     }
   } else {
     // 일반 웹페이지인 경우 기존 로직 유지
-    addMessageToUI("페이지 전체 번역(영어를 한국어로)을 요청합니다...", true);
+    addMessageToUI(getMessage(currentMessages, 'translatePageButton'), true);
     loader.classList.remove('hidden');
     try {
       const pageContent = await getPageContentForChat();
       if (!pageContent || pageContent.trim().length === 0) {
-        addMessageToUI("현재 페이지의 내용을 가져올 수 없거나 내용이 없습니다.", false, true);
+        addMessageToUI(getMessage(currentMessages, 'pageContentError'), false, true);
         loader.classList.add('hidden');
         return;
       }
-      const targetLanguage = "한국어";
-      const prompt = `다음 텍스트는 영어로 작성된 내용이야. 이 내용을 ${targetLanguage}(으)로 자연스럽게 번역해줘. HTML 태그나 코드는 번역 결과에 포함하지 마.:\n\n${pageContent}`;
+      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} ${getMessage(currentMessages, 'translatePrompt')}\n\n${pageContent}`;
       await streamResponse(prompt);
     } catch (error) {
       addMessageToUI("페이지 번역 중 오류: " + error.message, false, true);
@@ -501,9 +548,9 @@ async function handleTranslateSelectedText(textToTranslate = null) {
       const isPdf = await checkIfPdfPage().catch(() => false);
       
       if (isPdf) {
-        addMessageToUI("PDF에서 텍스트를 선택할 수 없습니다.\n\n번역하려는 텍스트를 아래 입력창에 직접 복사하여 붙여넣고 전송해주세요.", false, true);
+        addMessageToUI(getMessage(currentMessages, 'pdfTextSelectError') || 'Cannot select text from PDF. Please copy and paste the text to translate in the input field below.', false, true);
       } else {
-        addMessageToUI("번역할 텍스트가 선택되지 않았습니다.", false, true);
+        addMessageToUI(getMessage(currentMessages, 'errorNoSelectedText'), false, true);
       }
       loader.classList.add('hidden');
       return;
@@ -511,13 +558,12 @@ async function handleTranslateSelectedText(textToTranslate = null) {
 
     // 선택된 텍스트가 있는 경우 사용자에게 표시
     const displayText = selectedText.length > 100 ? selectedText.substring(0, 100) + "..." : selectedText;
-    addMessageToUI(`선택된 텍스트 번역: "${displayText}"`, true);
+    addMessageToUI(`${getMessage(currentMessages, 'translateSelectedText')}: "${displayText}"`, true);
 
-    const targetLanguage = "한국어";
-    const prompt = `다음 텍스트를 ${targetLanguage}(으)로 번역해줘:\n\n"${selectedText}"`;
+    const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} ${getMessage(currentMessages, 'translatePrompt')}\n\n"${selectedText}"`;
     await streamResponse(prompt);
   } catch (error) {
-    addMessageToUI("선택 영역 번역 중 오류: " + error.message, false, true);
+    addMessageToUI(getMessage(currentMessages, 'translateSelectionError') + ': ' + error.message, false, true);
     loader.classList.add('hidden');
   }
 }
@@ -624,7 +670,13 @@ async function streamResponse(promptText, imageParts = null) {
   try {
     const contentRequest = [];
     if (promptText) {
-      contentRequest.push({ text: promptText });
+      // 특별한 프롬프트가 아닌 일반 사용자 메시지인 경우 언어 프리픽스 추가
+      const isSpecialPrompt = promptText.includes(getMessage(currentMessages, 'translatePrompt')) || 
+                             promptText.includes(getMessage(currentMessages, 'summarizePrompt')) ||
+                             promptText.includes(getMessage(currentMessages, 'pdfTranslatePrompt'));
+      
+      const finalPrompt = isSpecialPrompt ? promptText : `${getMessage(currentMessages, 'generalPromptPrefix')} ${promptText}`;
+      contentRequest.push({ text: finalPrompt });
     }
     if (imageParts) {
       contentRequest.push(imageParts);
@@ -668,20 +720,20 @@ async function streamResponse(promptText, imageParts = null) {
           const icon = newCopyButton.querySelector('.material-symbols-rounded');
           const textSpan = newCopyButton.querySelector('span:not(.material-symbols-rounded)');
           icon.textContent = 'done';
-          textSpan.textContent = '복사됨';
+          textSpan.textContent = getMessage(currentMessages, 'copiedMessage');
           newCopyButton.classList.add('copied');
           
           // 토스트 메시지 표시
-          showToast('클립보드에 복사되었습니다', 'success');
+          showToast(getMessage(currentMessages, 'copiedMessage'), 'success');
 
           setTimeout(() => {
             icon.textContent = 'content_copy';
-            textSpan.textContent = '복사';
+            textSpan.textContent = getMessage(currentMessages, 'copyButton');
             newCopyButton.classList.remove('copied');
           }, 2000);
         }).catch(err => {
           console.error('클립보드 복사 실패:', err);
-          showToast('복사에 실패했습니다', 'error');
+          showToast(getMessage(currentMessages, 'copyError') || 'Copy failed', 'error');
         });
       });
     }
@@ -730,7 +782,7 @@ function sendMessage() {
   removeAttachedImage();
   loader.classList.remove('hidden');
 
-  streamResponse(text || (imageContentPart ? "이 이미지에 대해 설명해주세요." : ""), imageContentPart);
+  streamResponse(text || (imageContentPart ? getMessage(currentMessages, 'imageAnalyzePrompt') : ""), imageContentPart);
 }
 
 
@@ -738,12 +790,12 @@ function handleImageUpload(event) {
   const file = event.target.files[0];
   if (!file) return;
   if (!file.type.startsWith('image/')) {
-    addMessageToUI("이미지 파일만 첨부할 수 있습니다.", false, true);
+    addMessageToUI(getMessage(currentMessages, 'imageOnlyError') || 'Only image files can be attached.', false, true);
     return;
   }
   const maxSize = 5 * 1024 * 1024;
   if (file.size > maxSize) {
-    addMessageToUI("이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
+    addMessageToUI(getMessage(currentMessages, 'imageSizeError') || 'Image size is too large (max 5MB).', false, true);
     return;
   }
   const reader = new FileReader();
@@ -757,7 +809,7 @@ function handleImageUpload(event) {
     };
   };
   reader.onerror = function () {
-    addMessageToUI("이미지 파일을 읽는 중 오류가 발생했습니다.", false, true);
+    addMessageToUI(getMessage(currentMessages, 'imageReadError') || 'Error reading image file.', false, true);
   };
   reader.readAsDataURL(file);
 }
@@ -776,7 +828,7 @@ function handlePasteImage(event) {
       const blob = item.getAsFile();
       const maxSize = 5 * 1024 * 1024;
       if (blob.size > maxSize) {
-        addMessageToUI("붙여넣은 이미지 크기가 너무 큽니다 (최대 5MB).", false, true);
+        addMessageToUI(getMessage(currentMessages, 'imageSizeError') || 'Image size is too large (max 5MB).', false, true);
         return;
       }
       const reader = new FileReader();
@@ -836,8 +888,8 @@ function toggleFullscreen() {
 }
 
 function handleFullscreenError(error) {
-  console.error("풀스크린 전환 중 오류:", error);
-  const tempMsg = addMessageToUI("풀스크린 전환에 실패했습니다. (iframe allowfullscreen 속성 필요)", false, true);
+  console.error("Fullscreen error:", error);
+  const tempMsg = addMessageToUI(getMessage(currentMessages, 'fullscreenError') || 'Failed to toggle fullscreen (iframe allowfullscreen required)', false, true);
   setTimeout(() => tempMsg.remove(), 3000);
 }
 
@@ -866,13 +918,13 @@ function toggleTheme() {
 
 function clearChatMessages() {
   chatMessages.innerHTML = '';
-  addMessageToUI("안녕하세요! 무엇을 도와드릴까요? 페이지 전체에 대해서는 '페이지 요약' 또는 '페이지 번역' 버튼을, 선택한 텍스트에 대해서는 '선택 영역 번역' 버튼을 사용하거나, 직접 메시지를 입력해주세요.", false);
+  addMessageToUI(getMessage(currentMessages, 'welcomeMessage'), false);
 }
 
 // 폰트 목록 초기화
 function initializeFontList() {
   // 기본 옵션 유지
-  fontSelect.innerHTML = '<option value="">기본 폰트</option>';
+  fontSelect.innerHTML = `<option value="">${getMessage(currentMessages, 'defaultFont')}</option>`;
   
   // 한국어 폰트 추가
   koreanFonts.forEach(font => {

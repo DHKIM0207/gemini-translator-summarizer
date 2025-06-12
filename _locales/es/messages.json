@@ -1,0 +1,233 @@
+{
+  "extensionName": {
+    "message": "Traductor y Resumidor Gemini"
+  },
+  "extensionDescription": {
+    "message": "Herramienta de traducción y resumen impulsada por IA usando la API de Google Gemini"
+  },
+  "apiKeyInputPlaceholder": {
+    "message": "Ingrese su clave API de Gemini"
+  },
+  "saveApiKey": {
+    "message": "Guardar clave API"
+  },
+  "apiKeySaved": {
+    "message": "Clave API guardada exitosamente."
+  },
+  "chatbotTitle": {
+    "message": "Traducción y Resumen con IA"
+  },
+  "summarizePageButton": {
+    "message": "Resumir esta página"
+  },
+  "translatePageButton": {
+    "message": "Traducir esta página"
+  },
+  "uploadImageButton": {
+    "message": "Subir imagen"
+  },
+  "darkModeToggle": {
+    "message": "🌙"
+  },
+  "lightModeToggle": {
+    "message": "☀️"
+  },
+  "messageInputPlaceholder": {
+    "message": "Ingrese su mensaje..."
+  },
+  "sendButton": {
+    "message": "Enviar"
+  },
+  "copyButton": {
+    "message": "Copiar"
+  },
+  "copiedMessage": {
+    "message": "¡Copiado!"
+  },
+  "imageSelected": {
+    "message": "Imagen seleccionada"
+  },
+  "removeImage": {
+    "message": "Eliminar imagen"
+  },
+  "errorNoApiKey": {
+    "message": "Clave API no configurada. Por favor, ingrese su clave API en la configuración."
+  },
+  "errorPageExtraction": {
+    "message": "Error al extraer el contenido de la página"
+  },
+  "errorApiCall": {
+    "message": "Error al llamar a la API de Gemini"
+  },
+  "errorNoSelectedText": {
+    "message": "No hay texto seleccionado."
+  },
+  "translatePrompt": {
+    "message": "Por favor, traduzca el siguiente texto:"
+  },
+  "summarizePrompt": {
+    "message": "Por favor, resuma el siguiente contenido de la página web:"
+  },
+  "pdfTranslatePrompt": {
+    "message": "Por favor, traduzca el siguiente texto del PDF:"
+  },
+  "imageAnalyzePrompt": {
+    "message": "Por favor, analice esta imagen y explique."
+  },
+  "generalPromptPrefix": {
+    "message": "Por favor, responda en español."
+  },
+  "loadingMessage": {
+    "message": "Por favor, espere..."
+  },
+  "pdfViewerTitle": {
+    "message": "Visor de PDF"
+  },
+  "translateSelectedText": {
+    "message": "Traducir texto seleccionado"
+  },
+  "aiAssistant": {
+    "message": "Asistente de IA"
+  },
+  "newConversation": {
+    "message": "Nueva conversación"
+  },
+  "targetLanguage": {
+    "message": "Idioma de destino"
+  },
+  "langKorean": {
+    "message": "Coreano"
+  },
+  "langEnglish": {
+    "message": "Inglés"
+  },
+  "langJapanese": {
+    "message": "Japonés"
+  },
+  "langChinese": {
+    "message": "Chino (Simplificado)"
+  },
+  "langSpanish": {
+    "message": "Español"
+  },
+  "langFrench": {
+    "message": "Francés"
+  },
+  "langGerman": {
+    "message": "Alemán"
+  },
+  "langVietnamese": {
+    "message": "Vietnamita"
+  },
+  "summarizeButton": {
+    "message": "Resumir página"
+  },
+  "translateButton": {
+    "message": "Traducir página"
+  },
+  "resultPlaceholder": {
+    "message": "Los resultados aparecerán aquí."
+  },
+  "errorNoActiveTab": {
+    "message": "No se encontró ninguna pestaña activa."
+  },
+  "errorEmptyResponse": {
+    "message": "Se recibió una respuesta vacía de la API. Por favor, verifique su solicitud o intente con contenido diferente."
+  },
+  "languageChanged": {
+    "message": "Idioma cambiado. Actualice la página para aplicar."
+  },
+  "languageSettings": {
+    "message": "Configuración de idioma"
+  },
+  "selectLanguage": {
+    "message": "Seleccionar idioma"
+  },
+  "fullscreen": {
+    "message": "Pantalla completa"
+  },
+  "fullscreenExit": {
+    "message": "Salir de pantalla completa"
+  },
+  "themeToggle": {
+    "message": "Cambiar tema"
+  },
+  "settings": {
+    "message": "Configuración"
+  },
+  "closeChatbot": {
+    "message": "Cerrar chatbot"
+  },
+  "apiKeySettings": {
+    "message": "Configuración de clave API"
+  },
+  "fontSettings": {
+    "message": "Configuración de fuente"
+  },
+  "selectFont": {
+    "message": "Seleccionar fuente"
+  },
+  "defaultFont": {
+    "message": "Fuente predeterminada"
+  },
+  "fontSize": {
+    "message": "Tamaño de fuente"
+  },
+  "saveFontSettings": {
+    "message": "Guardar configuración de fuente"
+  },
+  "welcomeMessage": {
+    "message": "¡Hola! ¿Cómo puedo ayudarte? Usa los botones 'Resumir página' o 'Traducir página' para toda la página, 'Traducir seleccionado' para texto seleccionado, o escribe tu mensaje directamente."
+  },
+  "imagePreview": {
+    "message": "Vista previa"
+  },
+  "attachImage": {
+    "message": "Adjuntar imagen"
+  },
+  "copyError": {
+    "message": "Error al copiar"
+  },
+  "imageOnlyError": {
+    "message": "Solo se pueden adjuntar archivos de imagen."
+  },
+  "imageSizeError": {
+    "message": "El tamaño de la imagen es demasiado grande (máx. 5MB)."
+  },
+  "imageReadError": {
+    "message": "Error al leer el archivo de imagen."
+  },
+  "fullscreenError": {
+    "message": "No se pudo cambiar a pantalla completa (se requiere iframe allowfullscreen)"
+  },
+  "apiKeyInitError": {
+    "message": "Error al inicializar la clave API. Por favor, verifique su clave."
+  },
+  "geminiInitError": {
+    "message": "No se pudo inicializar Gemini AI. Por favor, verifique su clave API."
+  },
+  "requestingSummarize": {
+    "message": "Solicitando resumen de página..."
+  },
+  "requestingPdfSummarize": {
+    "message": "Solicitando resumen de la página {page} del PDF..."
+  },
+  "pdfPageContentError": {
+    "message": "No se puede obtener contenido de la página {page} o está vacía."
+  },
+  "pdfSummarizeError": {
+    "message": "Error al resumir la página del PDF"
+  },
+  "pageContentError": {
+    "message": "No se puede obtener el contenido de la página o está vacío."
+  },
+  "pageSummarizeError": {
+    "message": "Error al resumir la página"
+  },
+  "pdfTextSelectError": {
+    "message": "No se puede seleccionar texto del PDF.\n\nPor favor, copie y pegue el texto a traducir en el campo de entrada a continuación."
+  },
+  "translateSelectionError": {
+    "message": "Error al traducir el texto seleccionado"
+  }
+}
