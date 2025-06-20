@@ -313,6 +313,20 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
+// 마우스휠 이벤트 처리 (Ctrl/Cmd + 휠로 줌)
+document.addEventListener('wheel', (e) => {
+  if (e.ctrlKey || e.metaKey) {
+    e.preventDefault();
+    
+    // deltaY가 음수면 위로 스크롤 (확대), 양수면 아래로 스크롤 (축소)
+    if (e.deltaY < 0) {
+      zoomIn();
+    } else {
+      zoomOut();
+    }
+  }
+}, { passive: false });
+
 // 챗봇 iframe 관련 변수
 let chatbotIframe = null;
 let iframeVisible = false;
