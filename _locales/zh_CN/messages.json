@@ -229,5 +229,17 @@
   },
   "translateSelectionError": {
     "message": "翻译选中文本时出错"
+  },
+  "fileAccessPermissionTitle": {
+    "message": "需要文件访问权限"
+  },
+  "fileAccessPermissionMessage": {
+    "message": "要打开本地PDF文件，您需要在扩展程序设置中启用\"允许访问文件网址\"选项。"
+  },
+  "openSettings": {
+    "message": "打开设置"
+  },
+  "close": {
+    "message": "关闭"
   }
 }

@@ -229,5 +229,17 @@
   },
   "translateSelectionError": {
     "message": "選択テキストの翻訳中にエラー"
+  },
+  "fileAccessPermissionTitle": {
+    "message": "ファイルアクセス権限が必要です"
+  },
+  "fileAccessPermissionMessage": {
+    "message": "ローカルPDFファイルを開くには、拡張機能の設定で「ファイルのURLへのアクセスを許可する」オプションを有効にする必要があります。"
+  },
+  "openSettings": {
+    "message": "設定を開く"
+  },
+  "close": {
+    "message": "閉じる"
   }
 }

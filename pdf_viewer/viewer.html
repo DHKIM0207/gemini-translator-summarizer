@@ -67,7 +67,30 @@
     <img src="https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/chat_bubble/default/24px.svg" alt="Chat">
   </div>
 
+  <!-- 파일 접근 권한 팝업 -->
+  <div id="file-access-popup" class="popup-overlay hidden">
+    <div class="popup-content">
+      <div class="popup-header">
+        <span class="material-symbols-rounded popup-icon">folder_off</span>
+        <h3 id="popup-title"></h3>
+      </div>
+      <div class="popup-body">
+        <p id="popup-message"></p>
+      </div>
+      <div class="popup-footer">
+        <button id="open-settings-btn" class="popup-btn primary">
+          <span class="material-symbols-rounded">settings</span>
+          <span id="open-settings-text"></span>
+        </button>
+        <button id="close-popup-btn" class="popup-btn secondary">
+          <span id="close-text"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="../lib/pdf.min.js"></script>
+  <script src="../lib/i18n-helper.js"></script>
   <script src="viewer.js"></script>
 </body>
 </html>

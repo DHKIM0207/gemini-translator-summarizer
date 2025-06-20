@@ -36,9 +36,67 @@ function getPdfUrl() {
   return params.get('file') || params.get('url');
 }
 
+// 파일 URL 접근 권한 체크
+async function checkFileAccessPermission(url) {
+  // file:// URL인지 확인
+  if (url && url.startsWith('file://')) {
+    try {
+      // chrome.extension.isAllowedFileSchemeAccess API를 사용하여 권한 확인
+      const hasAccess = await new Promise((resolve) => {
+        chrome.extension.isAllowedFileSchemeAccess(resolve);
+      });
+      
+      if (!hasAccess) {
+        // 권한이 없으면 팝업 표시
+        showFileAccessPopup();
+        return false;
+      }
+    } catch (error) {
+      console.error('파일 접근 권한 확인 오류:', error);
+    }
+  }
+  return true;
+}
+
+// 파일 접근 권한 팝업 표시
+function showFileAccessPopup() {
+  const popup = document.getElementById('file-access-popup');
+  const popupTitle = document.getElementById('popup-title');
+  const popupMessage = document.getElementById('popup-message');
+  const openSettingsText = document.getElementById('open-settings-text');
+  const closeText = document.getElementById('close-text');
+  
+  // i18n 메시지 설정
+  popupTitle.textContent = chrome.i18n.getMessage('fileAccessPermissionTitle');
+  popupMessage.textContent = chrome.i18n.getMessage('fileAccessPermissionMessage');
+  openSettingsText.textContent = chrome.i18n.getMessage('openSettings');
+  closeText.textContent = chrome.i18n.getMessage('close');
+  
+  popup.classList.remove('hidden');
+  
+  // 설정 열기 버튼 이벤트
+  document.getElementById('open-settings-btn').addEventListener('click', () => {
+    chrome.tabs.create({
+      url: `chrome://extensions/?id=${chrome.runtime.id}`
+    });
+  });
+  
+  // 닫기 버튼 이벤트
+  document.getElementById('close-popup-btn').addEventListener('click', () => {
+    popup.classList.add('hidden');
+  });
+}
+
 // PDF 문서 로드
 async function loadPdf(url) {
   try {
+    // 파일 접근 권한 체크
+    const hasPermission = await checkFileAccessPermission(url);
+    if (!hasPermission) {
+      loadingIndicator.classList.add('hidden');
+      return;
+    }
+    
     loadingIndicator.classList.remove('hidden');
     errorMessage.classList.add('hidden');
     

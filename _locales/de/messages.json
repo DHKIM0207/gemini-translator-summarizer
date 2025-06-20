@@ -229,5 +229,17 @@
   },
   "translateSelectionError": {
     "message": "Fehler beim Übersetzen des ausgewählten Textes"
+  },
+  "fileAccessPermissionTitle": {
+    "message": "Dateizugriffsberechtigung erforderlich"
+  },
+  "fileAccessPermissionMessage": {
+    "message": "Um lokale PDF-Dateien zu öffnen, müssen Sie die Option \"Zugriff auf Datei-URLs zulassen\" in den Erweiterungseinstellungen aktivieren."
+  },
+  "openSettings": {
+    "message": "Einstellungen öffnen"
+  },
+  "close": {
+    "message": "Schließen"
   }
 }

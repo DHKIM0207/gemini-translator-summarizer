@@ -229,5 +229,17 @@
   },
   "translateSelectionError": {
     "message": "선택 영역 번역 중 오류"
+  },
+  "fileAccessPermissionTitle": {
+    "message": "파일 접근 권한 필요"
+  },
+  "fileAccessPermissionMessage": {
+    "message": "로컬 PDF 파일을 열려면 확장 프로그램 설정에서 '파일 URL에 대한 액세스 허용' 옵션을 활성화해야 합니다."
+  },
+  "openSettings": {
+    "message": "설정 열기"
+  },
+  "close": {
+    "message": "닫기"
   }
 }

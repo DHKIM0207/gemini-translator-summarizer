@@ -229,5 +229,17 @@
   },
   "translateSelectionError": {
     "message": "Erreur lors de la traduction du texte sélectionné"
+  },
+  "fileAccessPermissionTitle": {
+    "message": "Autorisation d'accès aux fichiers requise"
+  },
+  "fileAccessPermissionMessage": {
+    "message": "Pour ouvrir des fichiers PDF locaux, vous devez activer l'option « Autoriser l'accès aux URL de fichiers » dans les paramètres de l'extension."
+  },
+  "openSettings": {
+    "message": "Ouvrir les paramètres"
+  },
+  "close": {
+    "message": "Fermer"
   }
 }

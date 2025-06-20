@@ -229,5 +229,17 @@
   },
   "translateSelectionError": {
     "message": "Error translating selected text"
+  },
+  "fileAccessPermissionTitle": {
+    "message": "File Access Permission Required"
+  },
+  "fileAccessPermissionMessage": {
+    "message": "To open local PDF files, you need to enable 'Allow access to file URLs' in the extension settings."
+  },
+  "openSettings": {
+    "message": "Open Settings"
+  },
+  "close": {
+    "message": "Close"
   }
 }
