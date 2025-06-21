@@ -52,6 +52,7 @@ html {
   color: var(--text-color);
 }
 
+
 #chatbot-container {
   display: flex;
   flex-direction: column;

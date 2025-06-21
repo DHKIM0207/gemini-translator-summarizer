@@ -6,6 +6,11 @@
   let hideToolbarTimeout = null;
   let pendingHoverTranslationText = null;
   let isIframeReady = false;
+  let resizeHandle = null;
+  let isResizing = false;
+  let currentWidth = 450;
+  const MIN_WIDTH = 350;
+  let resizeOverlay = null;
 
   const chatIconUrl = 'https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/chat_bubble/default/24px.svg';
   const translateIconUrl = 'https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/translate/default/24px.svg';
@@ -146,6 +151,142 @@
     document.body.appendChild(fabButton);
   }
 
+  function createResizeHandle() {
+    if (!resizeHandle) {
+      resizeHandle = document.createElement('div');
+      resizeHandle.id = 'gemini-resize-handle';
+      resizeHandle.style.cssText = `
+        position: fixed;
+        top: 0;
+        width: 5px;
+        height: 100%;
+        background-color: transparent;
+        cursor: ew-resize;
+        z-index: 10001;
+        display: none;
+      `;
+      
+      // 호버 효과
+      resizeHandle.addEventListener('mouseenter', () => {
+        resizeHandle.style.backgroundColor = 'rgba(59, 130, 246, 0.5)';
+      });
+      
+      resizeHandle.addEventListener('mouseleave', () => {
+        if (!isResizing) {
+          resizeHandle.style.backgroundColor = 'transparent';
+        }
+      });
+      
+      // 리사이즈 이벤트
+      resizeHandle.addEventListener('mousedown', startResize);
+      
+      document.body.appendChild(resizeHandle);
+    }
+  }
+
+  function startResize(e) {
+    isResizing = true;
+    resizeHandle.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
+    document.body.style.cursor = 'ew-resize';
+    document.body.style.userSelect = 'none';
+    
+    // 리사이즈 시작 시 현재 iframe의 실제 너비를 가져옴
+    if (chatbotIframe) {
+      const currentActualWidth = chatbotIframe.getBoundingClientRect().width;
+      currentWidth = currentActualWidth;
+      // iframe의 pointer-events를 일시적으로 비활성화
+      chatbotIframe.style.pointerEvents = 'none';
+    }
+    
+    // 빠른 드래그 시에도 이벤트를 놓치지 않도록 오버레이 생성
+    createResizeOverlay();
+    
+    e.preventDefault();
+  }
+
+  function doResize(e) {
+    if (!isResizing || !chatbotIframe) return;
+    
+    // 마우스 위치로부터 새로운 너비 계산
+    // iframe은 오른쪽에 고정되어 있으므로, 화면 너비에서 마우스 X 위치를 뺀 값
+    const newWidth = window.innerWidth - e.clientX;
+    const maxAllowedWidth = window.innerWidth * 0.9;
+    
+    
+    if (newWidth >= MIN_WIDTH && newWidth <= maxAllowedWidth) {
+      currentWidth = Math.round(newWidth);
+      chatbotIframe.style.width = currentWidth + 'px';
+      // 리사이즈 핸들 위치도 실시간으로 업데이트
+      resizeHandle.style.left = Math.round(e.clientX - 2.5) + 'px';
+    } else if (newWidth < MIN_WIDTH) {
+      // 최소 너비로 제한
+      currentWidth = MIN_WIDTH;
+      chatbotIframe.style.width = MIN_WIDTH + 'px';
+      resizeHandle.style.left = Math.round(window.innerWidth - MIN_WIDTH - 2.5) + 'px';
+    } else if (newWidth > maxAllowedWidth) {
+      // 최대 너비로 제한
+      currentWidth = Math.round(maxAllowedWidth);
+      chatbotIframe.style.width = currentWidth + 'px';
+      resizeHandle.style.left = Math.round(window.innerWidth - maxAllowedWidth - 2.5) + 'px';
+    }
+  }
+
+  function stopResize() {
+    if (!isResizing) return;
+    
+    isResizing = false;
+    resizeHandle.style.backgroundColor = 'transparent';
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    
+    // iframe의 pointer-events 복원
+    if (chatbotIframe) {
+      chatbotIframe.style.pointerEvents = '';
+    }
+    
+    // 오버레이 제거
+    removeResizeOverlay();
+    
+    // 너비 저장
+    chrome.storage.local.set({ chatbotWidth: currentWidth });
+    
+    // 최종 위치 업데이트
+    updateResizeHandlePosition();
+  }
+
+  function updateResizeHandlePosition() {
+    if (resizeHandle && chatbotIframe) {
+      // iframe의 현재 위치를 기반으로 리사이즈 핸들 위치 계산
+      const iframeRect = chatbotIframe.getBoundingClientRect();
+      resizeHandle.style.left = (iframeRect.left - 2.5) + 'px';
+    }
+  }
+
+  function createResizeOverlay() {
+    if (!resizeOverlay) {
+      resizeOverlay = document.createElement('div');
+      resizeOverlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10002;
+        cursor: ew-resize;
+        background: transparent;
+        pointer-events: auto;
+      `;
+      document.body.appendChild(resizeOverlay);
+    }
+  }
+
+  function removeResizeOverlay() {
+    if (resizeOverlay) {
+      resizeOverlay.remove();
+      resizeOverlay = null;
+    }
+  }
+
   function createChatbotIframe() {
     if (chatbotIframe) {
       return;
@@ -156,7 +297,22 @@
     chatbotIframe.src = chrome.runtime.getURL('chatbot_ui/chatbot.html');
     chatbotIframe.setAttribute('allowfullscreen', '');
     chatbotIframe.setAttribute('allow', 'clipboard-write'); // 클립보드 쓰기 권한 추가
+    
+    // 저장된 너비가 있으면 복원
+    chrome.storage.local.get(['chatbotWidth'], (result) => {
+      if (result.chatbotWidth) {
+        currentWidth = result.chatbotWidth;
+        chatbotIframe.style.width = currentWidth + 'px';
+      } else {
+        // 기본값 설정
+        chatbotIframe.style.width = currentWidth + 'px';
+      }
+    });
+    
     document.body.appendChild(chatbotIframe);
+    
+    // 리사이즈 핸들 생성
+    createResizeHandle();
 
     chatbotIframe.onload = () => {
       console.log("Chatbot iframe loaded and ready.");
@@ -185,6 +341,14 @@
       chatbotIframe.classList.add('visible');
       if (fabButton) fabButton.style.display = 'none';
       hideSelectionToolbar();
+      
+      // 리사이즈 핸들 표시 및 위치 업데이트
+      if (resizeHandle) {
+        resizeHandle.style.display = 'block';
+        setTimeout(() => {
+          updateResizeHandlePosition();
+        }, 300); // 애니메이션 완료 후 위치 업데이트
+      }
 
       if (!isNewlyCreated) {
         isIframeReady = true;
@@ -202,6 +366,7 @@
     } else {
       if (chatbotIframe) chatbotIframe.classList.remove('visible');
       if (fabButton) fabButton.style.display = 'flex';
+      if (resizeHandle) resizeHandle.style.display = 'none'; // 리사이즈 핸들 숨기기
       isIframeReady = false;
       pendingHoverTranslationText = null;
     }
@@ -411,6 +576,10 @@
       if (!document.getElementById('gemini-fab')) { createFab(); }
     });
   }
+  
+  // 리사이즈 이벤트 리스너 추가
+  document.addEventListener('mousemove', doResize);
+  document.addEventListener('mouseup', stopResize);
 
   window.addEventListener("message", (event) => {
     if (!chatbotIframe || event.source !== chatbotIframe.contentWindow || !event.data) {
@@ -421,6 +590,10 @@
 
     if (event.data.type === "CLOSE_CHATBOT") {
       if (iframeVisible) toggleChatbot();
+    } else if (event.data.type === "RESIZE_CHATBOT") {
+      if (chatbotIframe && event.data.width) {
+        chatbotIframe.style.width = event.data.width + 'px';
+      }
     } else if (event.data.type === "GET_PAGE_CONTENT") {
       extractPageContent().then(content => {
         chatbotIframe.contentWindow.postMessage({ type: "PAGE_CONTENT_RESULT", content: content, requestId: event.data.requestId }, chatbotOrigin);

@@ -1273,6 +1273,7 @@ function saveFontSettings() {
   });
 }
 
+
 // 토스트 메시지 표시 함수
 function showToast(message, type = 'default') {
   const toastContainer = document.getElementById('toast-container');
