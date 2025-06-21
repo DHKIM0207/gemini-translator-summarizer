@@ -32,6 +32,12 @@
   "lightModeToggle": {
     "message": "☀️"
   },
+  "translateTooltip": {
+    "message": "翻译"
+  },
+  "searchTooltip": {
+    "message": "搜索"
+  },
   "messageInputPlaceholder": {
     "message": "输入您的消息..."
   },

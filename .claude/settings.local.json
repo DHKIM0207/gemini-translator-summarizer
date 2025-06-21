@@ -3,7 +3,11 @@
     "allow": [
       "Bash(find:*)",
       "Bash(rg:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(for locale in ja zh_CN es fr de)",
+      "Bash(do echo \"=== $locale ===\")",
+      "Bash(echo)",
+      "Bash(done)"
     ],
     "deny": []
   }

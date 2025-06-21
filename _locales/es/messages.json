@@ -32,6 +32,12 @@
   "lightModeToggle": {
     "message": "☀️"
   },
+  "translateTooltip": {
+    "message": "Traducir"
+  },
+  "searchTooltip": {
+    "message": "Buscar"
+  },
   "messageInputPlaceholder": {
     "message": "Ingrese su mensaje..."
   },

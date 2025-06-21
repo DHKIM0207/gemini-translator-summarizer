@@ -47,36 +47,83 @@
   transform: translateX(0); /* 오른쪽으로 슬라이드하며 나타남 */
 }
 
-/* 선택 영역 번역 호버 버튼 스타일 */
-#selection-translate-hover-btn {
-  position: absolute; /* 페이지 내용 기준 위치 */
-  /* display: none; 초기에는 숨김 - JS에서 제어 */
-  background-color: #3b82f6; /* 메인 색상 */
-  color: white;
+/* 선택 영역 툴바 스타일 */
+#selection-toolbar {
+  position: absolute;
+  display: none;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 4px;
+  z-index: 10001;
+  gap: 4px;
+  flex-direction: row;
+  align-items: center;
+}
+
+#selection-toolbar button {
+  background-color: transparent;
+  color: #374151;
   border: none;
-  border-radius: 50%; /* 원형 버튼 */
-  width: 42px;   /* 버튼 크기 증가 */
-  height: 42px;  /* 버튼 크기 증가 */
-  padding: 0; /* 내부 여백 없음 */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
   cursor: pointer;
-  z-index: 10001; /* 챗봇 iframe보다 위에 오도록 (필요시 조정) */
-  transition: opacity 0.1s ease-in-out, transform 0.1s ease-in-out;
-  opacity: 0.9; /* 약간 투명하게 */
-  display: flex; /* 내부 아이콘 중앙 정렬 위해 - 초기값은 none이어야 함 */
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  display: flex;
   justify-content: center;
   align-items: center;
-  /* 초기 숨김 처리 */
-  display: none;
+  position: relative;
 }
 
-#selection-translate-hover-btn:hover {
+#selection-toolbar button:hover {
+  background-color: #f3f4f6;
+  color: #3b82f6;
+}
+
+#selection-toolbar button:active {
+  background-color: #e5e7eb;
+}
+
+#selection-toolbar button span {
+  font-size: 20px !important;
+  line-height: 1;
+  font-family: 'Material Symbols Outlined' !important;
+  font-weight: normal;
+  font-style: normal;
+  display: inline-block;
+}
+
+/* 툴바 구분선 */
+#selection-toolbar .toolbar-divider {
+  width: 1px;
+  height: 24px;
+  background-color: #e5e7eb;
+  margin: 0 2px;
+}
+
+/* 툴팁 스타일 */
+#selection-toolbar button::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 8px;
+  padding: 4px 8px;
+  background-color: #1f2937;
+  color: white;
+  font-size: 12px;
+  font-family: system-ui, -apple-system, sans-serif;
+  white-space: nowrap;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+}
+
+#selection-toolbar button:hover::after {
   opacity: 1;
-  transform: scale(1.1);
-}
-
-#selection-translate-hover-btn img {
-  width: 20px; /* 아이콘 크기 */
-  height: 20px;
-  filter: invert(100%) sepia(0%) saturate(0%) hue-rotate(0deg) brightness(200%) contrast(100%); /* 아이콘 흰색 */
 }

@@ -32,6 +32,12 @@
   "lightModeToggle": {
     "message": "☀️"
   },
+  "translateTooltip": {
+    "message": "翻訳"
+  },
+  "searchTooltip": {
+    "message": "検索"
+  },
   "messageInputPlaceholder": {
     "message": "メッセージを入力..."
   },

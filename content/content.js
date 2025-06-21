@@ -2,8 +2,8 @@
   let fabButton = null;
   let chatbotIframe = null;
   let iframeVisible = false;
-  let hoverTranslateButton = null;
-  let hideHoverButtonTimeout = null;
+  let selectionToolbar = null;
+  let hideToolbarTimeout = null;
   let pendingHoverTranslationText = null;
   let isIframeReady = false;
 
@@ -162,8 +162,13 @@
       console.log("Chatbot iframe loaded and ready.");
       isIframeReady = true;
       if (pendingHoverTranslationText) {
-        console.log("Processing pending hover translation.");
-        sendTranslationRequestToChatbot(pendingHoverTranslationText);
+        console.log("Processing pending request.");
+        if (typeof pendingHoverTranslationText === 'object' && pendingHoverTranslationText.isSearch) {
+          sendSearchRequestToChatbot(pendingHoverTranslationText.text);
+        } else {
+          const text = typeof pendingHoverTranslationText === 'string' ? pendingHoverTranslationText : pendingHoverTranslationText.text;
+          sendTranslationRequestToChatbot(text);
+        }
         pendingHoverTranslationText = null;
       }
     };
@@ -179,13 +184,18 @@
     if (iframeVisible) {
       chatbotIframe.classList.add('visible');
       if (fabButton) fabButton.style.display = 'none';
-      hideHoverTranslateButton();
+      hideSelectionToolbar();
 
       if (!isNewlyCreated) {
         isIframeReady = true;
         if (pendingHoverTranslationText) {
-          console.log("Processing pending translation after toggling chatbot.");
-          sendTranslationRequestToChatbot(pendingHoverTranslationText);
+          console.log("Processing pending request after toggling chatbot.");
+          if (typeof pendingHoverTranslationText === 'object' && pendingHoverTranslationText.isSearch) {
+            sendSearchRequestToChatbot(pendingHoverTranslationText.text);
+          } else {
+            const text = typeof pendingHoverTranslationText === 'string' ? pendingHoverTranslationText : pendingHoverTranslationText.text;
+            sendTranslationRequestToChatbot(text);
+          }
           pendingHoverTranslationText = null;
         }
       }
@@ -197,59 +207,58 @@
     }
   }
 
-  function createHoverTranslateButton() {
-    if (!hoverTranslateButton) {
-      hoverTranslateButton = document.createElement('button');
-      hoverTranslateButton.id = 'selection-translate-hover-btn';
-      hoverTranslateButton.innerHTML = '<span style="color: white !important; font-size: 24px; line-height: 1; font-family: \'Material Symbols Outlined\'; font-weight: normal; font-style: normal; display: inline-block;">language_korean_latin</span>';
+  function createSelectionToolbar() {
+    if (!selectionToolbar) {
+      selectionToolbar = document.createElement('div');
+      selectionToolbar.id = 'selection-toolbar';
       
-      // Material Symbols Outlined 폰트 추가 (스타일 태그로)
+      // 번역 버튼
+      const translateBtn = document.createElement('button');
+      translateBtn.id = 'toolbar-translate-btn';
+      translateBtn.setAttribute('data-tooltip', chrome.i18n.getMessage('translateTooltip') || '번역');
+      translateBtn.innerHTML = '<span>translate</span>';
+      translateBtn.addEventListener('click', handleTranslateClick);
+      
+      // 검색 버튼
+      const searchBtn = document.createElement('button');
+      searchBtn.id = 'toolbar-search-btn';
+      searchBtn.setAttribute('data-tooltip', chrome.i18n.getMessage('searchTooltip') || '검색');
+      searchBtn.innerHTML = '<span>search</span>';
+      searchBtn.addEventListener('click', handleSearchClick);
+      
+      selectionToolbar.appendChild(translateBtn);
+      selectionToolbar.appendChild(searchBtn);
+      
+      // Material Symbols Outlined 폰트 추가
       if (!document.querySelector('#material-symbols-style')) {
         const style = document.createElement('style');
         style.id = 'material-symbols-style';
         style.textContent = `
-          @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
-          
-          #selection-translate-hover-btn span {
-            font-family: 'Material Symbols Outlined' !important;
-            font-weight: normal;
-            font-style: normal;
-            font-size: 24px;
-            line-height: 1;
-            letter-spacing: normal;
-            text-transform: none;
-            display: inline-block;
-            white-space: nowrap;
-            word-wrap: normal;
-            direction: ltr;
-            -webkit-font-feature-settings: 'liga';
-            -webkit-font-smoothing: antialiased;
-          }
+          @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0');
         `;
         document.head.appendChild(style);
       }
-      hoverTranslateButton.addEventListener('click', handleHoverTranslateClick);
-      document.body.appendChild(hoverTranslateButton);
+      
+      document.body.appendChild(selectionToolbar);
     }
   }
 
-  function showHoverTranslateButton(x, y) {
-    if (!hoverTranslateButton) {
-      createHoverTranslateButton();
+  function showSelectionToolbar(x, y) {
+    if (!selectionToolbar) {
+      createSelectionToolbar();
     }
-    hoverTranslateButton.style.left = `${x}px`;
-    hoverTranslateButton.style.top = `${y}px`;
-    hoverTranslateButton.style.display = 'flex';
+    selectionToolbar.style.left = `${x}px`;
+    selectionToolbar.style.top = `${y}px`;
+    selectionToolbar.style.display = 'flex';
 
-    // 타이머 설정하지 않음 - 드래그 중에는 사라지지 않도록
-    clearTimeout(hideHoverButtonTimeout);
+    clearTimeout(hideToolbarTimeout);
   }
 
-  function hideHoverTranslateButton() {
-    if (hoverTranslateButton) {
-      hoverTranslateButton.style.display = 'none';
+  function hideSelectionToolbar() {
+    if (selectionToolbar) {
+      selectionToolbar.style.display = 'none';
     }
-    clearTimeout(hideHoverButtonTimeout);
+    clearTimeout(hideToolbarTimeout);
   }
 
   function sendTranslationRequestToChatbot(text) {
@@ -264,19 +273,27 @@
     }
   }
 
+  function sendSearchRequestToChatbot(text) {
+    if (chatbotIframe && chatbotIframe.contentWindow) {
+      const chatbotOrigin = new URL(chrome.runtime.getURL('chatbot_ui/chatbot.html')).origin;
+      chatbotIframe.contentWindow.postMessage({
+        type: "SEARCH_FROM_HOVER",
+        searchText: text
+      }, chatbotOrigin);
+    } else {
+      console.error("Cannot send search message: Chatbot iframe not ready or not found.");
+    }
+  }
 
-  function handleHoverTranslateClick(event) {
-    event.stopPropagation();
-    
+
+  function getSelectedText() {
     let selectedText = "";
     try {
-      // PDF에서도 작동하도록 개선된 텍스트 선택 로직
       const selection = window.getSelection();
       if (selection && selection.rangeCount > 0) {
         selectedText = selection.toString();
       }
       
-      // PDF embed 요소가 있고 텍스트가 없는 경우
       if (!selectedText && document.querySelector('embed[type="application/pdf"]')) {
         const docSelection = document.getSelection();
         if (docSelection && docSelection.rangeCount > 0) {
@@ -284,33 +301,63 @@
         }
       }
     } catch (error) {
-      console.error("호버 번역: 텍스트 선택 중 오류:", error);
+      console.error("텍스트 선택 중 오류:", error);
     }
+    return selectedText.trim();
+  }
+
+  function handleTranslateClick(event) {
+    event.stopPropagation();
     
-    selectedText = selectedText.trim();
-    console.log("호버 번역 선택된 텍스트:", selectedText);
+    const selectedText = getSelectedText();
+    console.log("번역 선택된 텍스트:", selectedText);
     
     if (!selectedText) {
-      hideHoverTranslateButton();
+      hideSelectionToolbar();
       return;
     }
 
     if (!iframeVisible) {
-      console.log("Hover click: iframe hidden. Opening and pending translation.");
+      console.log("Translate click: iframe hidden. Opening and pending translation.");
       pendingHoverTranslationText = selectedText;
       toggleChatbot();
     } else if (isIframeReady) {
-      console.log("Hover click: iframe visible and ready. Sending translation request.");
+      console.log("Translate click: iframe visible and ready. Sending translation request.");
       sendTranslationRequestToChatbot(selectedText);
     } else {
-      console.log("Hover click: iframe visible but not ready. Pending translation.");
+      console.log("Translate click: iframe visible but not ready. Pending translation.");
       pendingHoverTranslationText = selectedText;
     }
-    hideHoverTranslateButton();
+    hideSelectionToolbar();
+  }
+
+  function handleSearchClick(event) {
+    event.stopPropagation();
+    
+    const selectedText = getSelectedText();
+    console.log("검색 선택된 텍스트:", selectedText);
+    
+    if (!selectedText) {
+      hideSelectionToolbar();
+      return;
+    }
+
+    if (!iframeVisible) {
+      console.log("Search click: iframe hidden. Opening and pending search.");
+      pendingHoverTranslationText = { text: selectedText, isSearch: true };
+      toggleChatbot();
+    } else if (isIframeReady) {
+      console.log("Search click: iframe visible and ready. Sending search request.");
+      sendSearchRequestToChatbot(selectedText);
+    } else {
+      console.log("Search click: iframe visible but not ready. Pending search.");
+      pendingHoverTranslationText = { text: selectedText, isSearch: true };
+    }
+    hideSelectionToolbar();
   }
 
   document.addEventListener('mouseup', (event) => {
-    if (hoverTranslateButton && hoverTranslateButton.contains(event.target)) {
+    if (selectionToolbar && selectionToolbar.contains(event.target)) {
       return;
     }
     setTimeout(() => {
@@ -323,28 +370,28 @@
         if (rect.width === 0 && rect.height === 0) return;
         const scrollX = window.scrollX;
         const scrollY = window.scrollY;
-        const btnX = scrollX + rect.right - 21;
-        const btnY = scrollY + rect.bottom;
-        showHoverTranslateButton(btnX, btnY);
+        const toolbarX = scrollX + rect.left + (rect.width / 2) - 40;
+        const toolbarY = scrollY + rect.bottom + 5;
+        showSelectionToolbar(toolbarX, toolbarY);
       } else {
-        if (!hoverTranslateButton || !hoverTranslateButton.contains(event.target)) {
-          hideHoverTranslateButton();
+        if (!selectionToolbar || !selectionToolbar.contains(event.target)) {
+          hideSelectionToolbar();
         }
       }
     }, 50);
   });
 
-  // 선택 영역이 변경되면 버튼 숨기기
+  // 선택 영역이 변경되면 툴바 숨기기
   document.addEventListener('selectionchange', () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
-      hideHoverTranslateButton();
+      hideSelectionToolbar();
     }
   });
 
-  // 클릭 시 선택 영역이 해제되면 버튼 숨기기
+  // 클릭 시 선택 영역이 해제되면 툴바 숨기기
   document.addEventListener('click', (event) => {
-    if (hoverTranslateButton && hoverTranslateButton.contains(event.target)) {
+    if (selectionToolbar && selectionToolbar.contains(event.target)) {
       return;
     }
     
@@ -352,7 +399,7 @@
     setTimeout(() => {
       const selection = window.getSelection();
       if (!selection || selection.isCollapsed || !selection.toString().trim()) {
-        hideHoverTranslateButton();
+        hideSelectionToolbar();
       }
     }, 100);
   });

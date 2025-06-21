@@ -223,6 +223,16 @@ async function initializeChatbot() {
         addMessageToUI("호버 버튼에서 전달된 텍스트가 없습니다.", false, true);
         loader.classList.add('hidden');
       }
+    } else if (request.type === "SEARCH_FROM_HOVER") {
+      loader.classList.remove('hidden');
+      if (request.searchText) {
+        const snippet = request.searchText.length > 50 ? request.searchText.substring(0, 50) + "..." : request.searchText;
+        addMessageToUI(`[페이지 선택] "${snippet}" 검색 요청됨`, true);
+        handleSearchText(request.searchText);
+      } else {
+        addMessageToUI("검색할 텍스트가 없습니다.", false, true);
+        loader.classList.add('hidden');
+      }
     } else if (request.type === "TRANSLATE_PDF_PAGE") {
       loader.classList.remove('hidden');
       if (request.pageText) {
@@ -616,6 +626,41 @@ async function handleTranslateSelectedText(textToTranslate = null) {
   }
 }
 
+// 검색 함수 추가
+async function handleSearchText(searchText) {
+  if (!chatSession && !startNewChatSession()) return;
+
+  loader.classList.remove('hidden');
+  try {
+    if (!searchText || searchText.trim().length === 0) {
+      addMessageToUI("검색할 텍스트가 없습니다.", false, true);
+      loader.classList.add('hidden');
+      return;
+    }
+
+    // 검색할 텍스트가 있는 경우 사용자에게 표시
+    const displayText = searchText.length > 100 ? searchText.substring(0, 100) + "..." : searchText;
+    addMessageToUI(`검색 요청: "${displayText}"`, true);
+
+    const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} 다음 주제에 대해 최신 정보를 검색하고 답변해주세요:
+
+"${searchText}"
+
+답변 형식:
+1. **핵심 정보** - 가장 중요한 내용을 간략히 설명
+2. **상세 내용** - 구체적인 정보와 예시
+3. **최신 동향** - 최근 업데이트나 트렌드 (있는 경우)
+4. **관련 정보** - 추가로 알면 좋은 내용
+
+정확하고 신뢰할 수 있는 정보를 제공해주세요.`;
+    
+    await streamResponseWithSearch(prompt);
+  } catch (error) {
+    addMessageToUI('검색 중 오류 발생: ' + error.message, false, true);
+    loader.classList.add('hidden');
+  }
+}
+
 // 요약 함수 추가
 async function handleSummarizeContent(textToSummarize) {
   if (!chatSession && !startNewChatSession()) return;
@@ -776,6 +821,102 @@ async function getPdfPageContent(pageNumber) {
   });
 }
 
+
+async function streamResponseWithSearch(promptText, imageParts = null) {
+  if (!genAI) {
+    addMessageToUI("API 키가 설정되지 않았습니다.", false, true);
+    loader.classList.add('hidden');
+    return;
+  }
+
+  const botMessageDiv = addMessageToUI("답변 생성 중...", false);
+  const contentDiv = botMessageDiv.querySelector('.message-content');
+  const paragraph = contentDiv.querySelector('p');
+  const copyButton = botMessageDiv.querySelector('.copy-button');
+
+  if (paragraph) paragraph.innerHTML = "";
+
+  try {
+    // Gemini 2.0 Flash 모델로 검색 기능 활성화
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash-exp",
+      tools: [{ googleSearch: {} }]
+    });
+
+    const contentRequest = [];
+    if (promptText) {
+      contentRequest.push({ text: promptText });
+    }
+    if (imageParts) {
+      contentRequest.push(imageParts);
+    }
+
+    if (contentRequest.length === 0) {
+      if (paragraph) paragraph.innerHTML = "요청 내용이 없습니다.";
+      loader.classList.add('hidden');
+      return;
+    }
+
+    const result = await model.generateContentStream(contentRequest);
+    let accumulatedText = "";
+
+    for await (const chunk of result.stream) {
+      if (chunk.candidates && chunk.candidates.length > 0) {
+        const chunkText = chunk.text();
+        accumulatedText += chunkText;
+        if (paragraph) {
+          try {
+            paragraph.innerHTML = marked.parse(accumulatedText);
+          } catch (e) {
+            console.error("Markdown 파싱 중 오류:", e);
+            paragraph.textContent = accumulatedText;
+          }
+        }
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
+    }
+    
+    if (copyButton) {
+      const newCopyButton = copyButton.cloneNode(true);
+      copyButton.parentNode.replaceChild(newCopyButton, copyButton);
+
+      newCopyButton.addEventListener('click', () => {
+        const finalParagraph = newCopyButton.closest('.message').querySelector('.message-content p');
+        const textToCopy = finalParagraph ? finalParagraph.textContent : accumulatedText;
+
+        navigator.clipboard.writeText(textToCopy).then(() => {
+          const icon = newCopyButton.querySelector('.material-symbols-rounded');
+          const textSpan = newCopyButton.querySelector('span:not(.material-symbols-rounded)');
+          icon.textContent = 'done';
+          textSpan.textContent = getMessage(currentMessages, 'copiedMessage');
+          newCopyButton.classList.add('copied');
+          
+          showToast(getMessage(currentMessages, 'copiedMessage'), 'success');
+
+          setTimeout(() => {
+            icon.textContent = 'content_copy';
+            textSpan.textContent = getMessage(currentMessages, 'copyButton');
+            newCopyButton.classList.remove('copied');
+          }, 2000);
+        }).catch(err => {
+          console.error('클립보드 복사 실패:', err);
+          showToast(getMessage(currentMessages, 'copyError') || 'Copy failed', 'error');
+        });
+      });
+    }
+
+  } catch (error) {
+    console.error("Gemini API 검색 오류:", error);
+    if (paragraph) {
+      paragraph.innerHTML = `<span class="error-message">API 오류: ${error.message || '알 수 없는 오류'}</span>`;
+      if (copyButton) copyButton.remove();
+    } else {
+      addMessageToUI(`API 오류: ${error.message || '알 수 없는 오류'}`, false, true);
+    }
+  } finally {
+    loader.classList.add('hidden');
+  }
+}
 
 async function streamResponse(promptText, imageParts = null) {
   if (!chatSession && !startNewChatSession()) {
