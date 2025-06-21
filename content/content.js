@@ -323,8 +323,8 @@
         if (rect.width === 0 && rect.height === 0) return;
         const scrollX = window.scrollX;
         const scrollY = window.scrollY;
-        const btnX = scrollX + rect.left + (rect.width / 2) - 21;
-        const btnY = scrollY + rect.bottom + 5;
+        const btnX = scrollX + rect.right - 21;
+        const btnY = scrollY + rect.bottom;
         showHoverTranslateButton(btnX, btnY);
       } else {
         if (!hoverTranslateButton || !hoverTranslateButton.contains(event.target)) {

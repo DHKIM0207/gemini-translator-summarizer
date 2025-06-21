@@ -588,8 +588,8 @@ document.addEventListener('mouseup', (event) => {
       const rect = range.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
       
-      const btnX = rect.left + (rect.width / 2) - 21;
-      const btnY = rect.bottom + 5;
+      const btnX = scrollX + rect.right - 21;
+        const btnY = scrollY + rect.bottom;
       showHoverTranslateButton(btnX, btnY);
     }
   }, 50);
