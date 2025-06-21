@@ -217,17 +217,18 @@
       currentWidth = Math.round(newWidth);
       chatbotIframe.style.width = currentWidth + 'px';
       // 리사이즈 핸들 위치도 실시간으로 업데이트
-      resizeHandle.style.left = Math.round(e.clientX - 2.5) + 'px';
+      // 핸들의 중앙이 iframe의 왼쪽 가장자리에 위치하도록 설정
+      resizeHandle.style.left = Math.round(window.innerWidth - currentWidth - 16) + 'px';
     } else if (newWidth < MIN_WIDTH) {
       // 최소 너비로 제한
       currentWidth = MIN_WIDTH;
       chatbotIframe.style.width = MIN_WIDTH + 'px';
-      resizeHandle.style.left = Math.round(window.innerWidth - MIN_WIDTH - 2.5) + 'px';
+      resizeHandle.style.left = Math.round(window.innerWidth - MIN_WIDTH - 16) + 'px';
     } else if (newWidth > maxAllowedWidth) {
       // 최대 너비로 제한
       currentWidth = Math.round(maxAllowedWidth);
       chatbotIframe.style.width = currentWidth + 'px';
-      resizeHandle.style.left = Math.round(window.innerWidth - maxAllowedWidth - 2.5) + 'px';
+      resizeHandle.style.left = Math.round(window.innerWidth - maxAllowedWidth - 16) + 'px';
     }
   }
 
@@ -257,6 +258,7 @@
   function updateResizeHandlePosition() {
     if (resizeHandle && chatbotIframe) {
       // iframe의 현재 위치를 기반으로 리사이즈 핸들 위치 계산
+      // 핸들의 중앙이 iframe의 왼쪽 가장자리에 위치하도록 설정
       const iframeRect = chatbotIframe.getBoundingClientRect();
       resizeHandle.style.left = (iframeRect.left - 2.5) + 'px';
     }
