@@ -241,5 +241,59 @@
   },
   "close": {
     "message": "閉じる"
+  },
+  "pdfViewerOutline": {
+    "message": "目次"
+  },
+  "pdfViewerPrevPage": {
+    "message": "前のページ"
+  },
+  "pdfViewerNextPage": {
+    "message": "次のページ"
+  },
+  "pdfViewerZoomOut": {
+    "message": "縮小"
+  },
+  "pdfViewerZoomIn": {
+    "message": "拡大"
+  },
+  "pdfViewerFitWidth": {
+    "message": "幅に合わせる"
+  },
+  "pdfViewerActualSize": {
+    "message": "実際のサイズ"
+  },
+  "pdfViewerRotate": {
+    "message": "回転"
+  },
+  "pdfViewerPageMode": {
+    "message": "ページ表示モード"
+  },
+  "pdfViewerSinglePage": {
+    "message": "単一ページ"
+  },
+  "pdfViewerDoublePage": {
+    "message": "見開きページ"
+  },
+  "pdfViewerTranslatePage": {
+    "message": "現在のページを翻訳"
+  },
+  "pdfViewerSummarizePage": {
+    "message": "現在のページを要約"
+  },
+  "pdfViewerSummarizeFull": {
+    "message": "全体PDFを要約"
+  },
+  "pdfViewerPrint": {
+    "message": "印刷"
+  },
+  "pdfViewerDownload": {
+    "message": "ダウンロード"
+  },
+  "pdfViewerFullscreen": {
+    "message": "フルスクリーン"
+  },
+  "pdfViewerFullscreenExit": {
+    "message": "フルスクリーン終了"
   }
 }

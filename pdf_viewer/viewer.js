@@ -296,7 +296,7 @@ function zoomIn() {
   // 수동 줌 시 현재 상태가 너비 맞춤이면 해제
   if (fitMode === 'width') {
     fitMode = 'none';
-    fitPageButton.title = '너비에 맞추기';
+    fitPageButton.title = chrome.i18n.getMessage('pdfViewerFitWidth');
     fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
   }
   
@@ -310,7 +310,7 @@ function zoomOut() {
   // 수동 줌 시 현재 상태가 너비 맞춤이면 해제
   if (fitMode === 'width') {
     fitMode = 'none';
-    fitPageButton.title = '너비에 맞추기';
+    fitPageButton.title = chrome.i18n.getMessage('pdfViewerFitWidth');
     fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
   }
   
@@ -333,13 +333,13 @@ function fitPage() {
         targetWidth = (containerWidth - 20) / 2; // gap 고려
       }
       scale = targetWidth / viewport.width;
-      fitPageButton.title = '실제 크기';
+      fitPageButton.title = chrome.i18n.getMessage('pdfViewerActualSize');
       fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_screen';
     } else {
       // 너비에 맞추기에서 실제 크기로 전환
       fitMode = 'none';
       scale = 1.0;
-      fitPageButton.title = '너비에 맞추기';
+      fitPageButton.title = chrome.i18n.getMessage('pdfViewerFitWidth');
       fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
     }
     
@@ -924,7 +924,7 @@ pageViewModeButton.addEventListener('click', () => {
     pdfRenderContainer.classList.remove('single-page');
     pdfRenderContainer.classList.add('double-page');
     pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'menu_book';
-    pageViewModeButton.title = '단일 페이지';
+    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerSinglePage');
     
     // 홀수 페이지로 조정
     if (pageNum % 2 === 0) {
@@ -936,7 +936,7 @@ pageViewModeButton.addEventListener('click', () => {
     pdfRenderContainer.classList.remove('double-page');
     pdfRenderContainer.classList.add('single-page');
     pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'auto_stories';
-    pageViewModeButton.title = '두 페이지';
+    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerDoublePage');
   }
   
   queueRenderPage(pageNum);
@@ -990,6 +990,7 @@ fullscreenButton.addEventListener('click', () => {
       if (icon) {
         icon.textContent = 'fullscreen_exit';
       }
+      fullscreenButton.title = chrome.i18n.getMessage('pdfViewerFullscreenExit');
     }).catch(err => {
       console.error('전체화면 전환 오류:', err);
     });
@@ -1001,6 +1002,7 @@ fullscreenButton.addEventListener('click', () => {
       if (icon) {
         icon.textContent = 'fullscreen';
       }
+      fullscreenButton.title = chrome.i18n.getMessage('pdfViewerFullscreen');
     });
   }
 });
@@ -1158,15 +1160,67 @@ document.addEventListener('fullscreenchange', () => {
     if (icon) {
       icon.textContent = 'fullscreen';
     }
+    fullscreenButton.title = chrome.i18n.getMessage('pdfViewerFullscreen');
   } else {
     if (icon) {
       icon.textContent = 'fullscreen_exit';
     }
+    fullscreenButton.title = chrome.i18n.getMessage('pdfViewerFullscreenExit');
   }
 });
 
+// i18n 초기화 및 버튼 텍스트 설정
+function applyI18nToButtons() {
+  // 목차 버튼
+  toggleOutlineButton.title = chrome.i18n.getMessage('pdfViewerOutline');
+  
+  // 페이지 네비게이션
+  prevButton.title = chrome.i18n.getMessage('pdfViewerPrevPage');
+  nextButton.title = chrome.i18n.getMessage('pdfViewerNextPage');
+  
+  // 줌 버튼
+  zoomOutButton.title = chrome.i18n.getMessage('pdfViewerZoomOut');
+  zoomInButton.title = chrome.i18n.getMessage('pdfViewerZoomIn');
+  
+  // 페이지 맞춤 버튼 (초기값)
+  if (fitMode === 'none') {
+    fitPageButton.title = chrome.i18n.getMessage('pdfViewerFitWidth');
+  } else {
+    fitPageButton.title = chrome.i18n.getMessage('pdfViewerActualSize');
+  }
+  
+  // 회전 버튼
+  rotateButton.title = chrome.i18n.getMessage('pdfViewerRotate');
+  
+  // 페이지 보기 모드 버튼
+  if (pageViewMode === 'single') {
+    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerDoublePage');
+  } else {
+    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerSinglePage');
+  }
+  
+  // 번역 및 요약 버튼
+  translateButton.title = chrome.i18n.getMessage('pdfViewerTranslatePage');
+  summarizeButton.title = chrome.i18n.getMessage('pdfViewerSummarizePage');
+  summarizeFullButton.title = chrome.i18n.getMessage('pdfViewerSummarizeFull');
+  
+  // 인쇄 및 다운로드 버튼
+  printButton.title = chrome.i18n.getMessage('pdfViewerPrint');
+  downloadButton.title = chrome.i18n.getMessage('pdfViewerDownload');
+  
+  // 전체화면 버튼
+  if (!document.fullscreenElement) {
+    fullscreenButton.title = chrome.i18n.getMessage('pdfViewerFullscreen');
+  } else {
+    fullscreenButton.title = chrome.i18n.getMessage('pdfViewerFullscreenExit');
+  }
+}
+
 // 페이지 로드 시 PDF 로드
 window.addEventListener('DOMContentLoaded', () => {
+  // i18n 적용
+  applyI18nToButtons();
+  
   const pdfUrl = getPdfUrl();
   if (pdfUrl) {
     loadPdf(pdfUrl);

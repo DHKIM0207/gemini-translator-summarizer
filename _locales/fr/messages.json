@@ -241,5 +241,59 @@
   },
   "close": {
     "message": "Fermer"
+  },
+  "pdfViewerOutline": {
+    "message": "Plan"
+  },
+  "pdfViewerPrevPage": {
+    "message": "Page précédente"
+  },
+  "pdfViewerNextPage": {
+    "message": "Page suivante"
+  },
+  "pdfViewerZoomOut": {
+    "message": "Zoom arrière"
+  },
+  "pdfViewerZoomIn": {
+    "message": "Zoom avant"
+  },
+  "pdfViewerFitWidth": {
+    "message": "Ajuster à la largeur"
+  },
+  "pdfViewerActualSize": {
+    "message": "Taille réelle"
+  },
+  "pdfViewerRotate": {
+    "message": "Pivoter"
+  },
+  "pdfViewerPageMode": {
+    "message": "Mode d'affichage"
+  },
+  "pdfViewerSinglePage": {
+    "message": "Page unique"
+  },
+  "pdfViewerDoublePage": {
+    "message": "Double page"
+  },
+  "pdfViewerTranslatePage": {
+    "message": "Traduire la page actuelle"
+  },
+  "pdfViewerSummarizePage": {
+    "message": "Résumer la page actuelle"
+  },
+  "pdfViewerSummarizeFull": {
+    "message": "Résumer le PDF complet"
+  },
+  "pdfViewerPrint": {
+    "message": "Imprimer"
+  },
+  "pdfViewerDownload": {
+    "message": "Télécharger"
+  },
+  "pdfViewerFullscreen": {
+    "message": "Plein écran"
+  },
+  "pdfViewerFullscreenExit": {
+    "message": "Quitter le plein écran"
   }
 }

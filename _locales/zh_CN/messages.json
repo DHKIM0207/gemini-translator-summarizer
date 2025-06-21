@@ -241,5 +241,59 @@
   },
   "close": {
     "message": "关闭"
+  },
+  "pdfViewerOutline": {
+    "message": "目录"
+  },
+  "pdfViewerPrevPage": {
+    "message": "上一页"
+  },
+  "pdfViewerNextPage": {
+    "message": "下一页"
+  },
+  "pdfViewerZoomOut": {
+    "message": "缩小"
+  },
+  "pdfViewerZoomIn": {
+    "message": "放大"
+  },
+  "pdfViewerFitWidth": {
+    "message": "适合宽度"
+  },
+  "pdfViewerActualSize": {
+    "message": "实际大小"
+  },
+  "pdfViewerRotate": {
+    "message": "旋转"
+  },
+  "pdfViewerPageMode": {
+    "message": "页面查看模式"
+  },
+  "pdfViewerSinglePage": {
+    "message": "单页"
+  },
+  "pdfViewerDoublePage": {
+    "message": "双页"
+  },
+  "pdfViewerTranslatePage": {
+    "message": "翻译当前页面"
+  },
+  "pdfViewerSummarizePage": {
+    "message": "总结当前页面"
+  },
+  "pdfViewerSummarizeFull": {
+    "message": "总结整个PDF"
+  },
+  "pdfViewerPrint": {
+    "message": "打印"
+  },
+  "pdfViewerDownload": {
+    "message": "下载"
+  },
+  "pdfViewerFullscreen": {
+    "message": "全屏"
+  },
+  "pdfViewerFullscreenExit": {
+    "message": "退出全屏"
   }
 }

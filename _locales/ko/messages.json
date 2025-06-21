@@ -241,5 +241,59 @@
   },
   "close": {
     "message": "닫기"
+  },
+  "pdfViewerOutline": {
+    "message": "목차"
+  },
+  "pdfViewerPrevPage": {
+    "message": "이전 페이지"
+  },
+  "pdfViewerNextPage": {
+    "message": "다음 페이지"
+  },
+  "pdfViewerZoomOut": {
+    "message": "축소"
+  },
+  "pdfViewerZoomIn": {
+    "message": "확대"
+  },
+  "pdfViewerFitWidth": {
+    "message": "너비에 맞추기"
+  },
+  "pdfViewerActualSize": {
+    "message": "실제 크기"
+  },
+  "pdfViewerRotate": {
+    "message": "회전"
+  },
+  "pdfViewerPageMode": {
+    "message": "페이지 보기 모드"
+  },
+  "pdfViewerSinglePage": {
+    "message": "단일 페이지"
+  },
+  "pdfViewerDoublePage": {
+    "message": "두 페이지"
+  },
+  "pdfViewerTranslatePage": {
+    "message": "현재 페이지 번역"
+  },
+  "pdfViewerSummarizePage": {
+    "message": "현재 페이지 요약"
+  },
+  "pdfViewerSummarizeFull": {
+    "message": "전체 PDF 요약"
+  },
+  "pdfViewerPrint": {
+    "message": "인쇄"
+  },
+  "pdfViewerDownload": {
+    "message": "다운로드"
+  },
+  "pdfViewerFullscreen": {
+    "message": "전체화면"
+  },
+  "pdfViewerFullscreenExit": {
+    "message": "전체화면 종료"
   }
 }
