@@ -38,6 +38,9 @@
   "searchTooltip": {
     "message": "검색"
   },
+  "searchToggle": {
+    "message": "웹 검색"
+  },
   "messageInputPlaceholder": {
     "message": "메시지를 입력하세요..."
   },

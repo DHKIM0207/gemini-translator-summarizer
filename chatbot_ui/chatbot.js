@@ -44,6 +44,9 @@ const saveFontSettingsBtn = document.getElementById('saveFontSettingsBtn');
 const languageSelect = document.getElementById('languageSelect');
 const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 
+// 웹검색 토글 관련 요소
+const searchToggle = document.getElementById('searchToggle');
+
 let currentApiKey = null;
 let attachedImage = null;
 
@@ -91,7 +94,7 @@ async function initializeChatbot() {
   const currentLocale = await initializeI18n();
   currentMessages = await getMessages(currentLocale);
   
-  chrome.storage.local.get(['geminiApiKey', 'theme', 'fontFamily', 'fontSize', 'language'], (result) => {
+  chrome.storage.local.get(['geminiApiKey', 'theme', 'fontFamily', 'fontSize', 'language', 'searchToggleState'], (result) => {
     if (result.geminiApiKey) {
       apiKeyInput.value = result.geminiApiKey;
       currentApiKey = result.geminiApiKey;
@@ -131,6 +134,16 @@ async function initializeChatbot() {
     
     // 폰트 목록 초기화
     initializeFontList();
+    
+    // 웹검색 토글 상태 복원
+    if (result.searchToggleState !== undefined) {
+      searchToggle.checked = result.searchToggleState;
+    }
+  });
+  
+  // 웹검색 토글 상태 변경 시 저장
+  searchToggle.addEventListener('change', () => {
+    chrome.storage.local.set({ searchToggleState: searchToggle.checked });
   });
 
   fullscreenBtn.addEventListener('click', toggleFullscreen);
@@ -1046,7 +1059,12 @@ function sendMessage() {
   removeAttachedImage();
   loader.classList.remove('hidden');
 
-  streamResponse(text || (imageContentPart ? getMessage(currentMessages, 'imageAnalyzePrompt') : ""), imageContentPart);
+  // 웹검색 토글이 켜져 있으면 검색 기능 활성화된 스트림 사용
+  if (searchToggle && searchToggle.checked) {
+    streamResponseWithSearch(text || (imageContentPart ? getMessage(currentMessages, 'imageAnalyzePrompt') : ""), imageContentPart);
+  } else {
+    streamResponse(text || (imageContentPart ? getMessage(currentMessages, 'imageAnalyzePrompt') : ""), imageContentPart);
+  }
 }
 
 

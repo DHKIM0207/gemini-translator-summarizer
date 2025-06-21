@@ -38,6 +38,9 @@
   "searchTooltip": {
     "message": "Rechercher"
   },
+  "searchToggle": {
+    "message": "Recherche Web"
+  },
   "messageInputPlaceholder": {
     "message": "Entrez votre message..."
   },

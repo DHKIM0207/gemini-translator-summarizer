@@ -38,6 +38,9 @@
   "searchTooltip": {
     "message": "検索"
   },
+  "searchToggle": {
+    "message": "ウェブ検索"
+  },
   "messageInputPlaceholder": {
     "message": "メッセージを入力..."
   },

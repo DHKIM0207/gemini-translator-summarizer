@@ -111,15 +111,26 @@
       </div>
     </div>
 
-    <div id="chat-input-area">
-      <textarea id="userInput" data-i18n-placeholder="messageInputPlaceholder" placeholder="Enter your message..."></textarea>
-      <button id="image-upload-btn" data-i18n-title="attachImage" title="Attach Image">
-        <span class="material-symbols-rounded">image</span>
-      </button>
-      <input type="file" id="image-file-input" accept="image/*" class="hidden">
-      <button id="sendBtn">
-        <span class="material-symbols-rounded">send</span>
-      </button>
+    <div id="chat-input-container">
+      <div id="search-toggle-container">
+        <label class="search-toggle-label">
+          <input type="checkbox" id="searchToggle" class="search-toggle-checkbox">
+          <span class="search-toggle-slider">
+            <span class="material-symbols-rounded search-icon">search</span>
+            <span class="toggle-text" data-i18n="searchToggle">웹 검색</span>
+          </span>
+        </label>
+      </div>
+      <div id="chat-input-area">
+        <textarea id="userInput" data-i18n-placeholder="messageInputPlaceholder" placeholder="Enter your message..."></textarea>
+        <button id="image-upload-btn" data-i18n-title="attachImage" title="Attach Image">
+          <span class="material-symbols-rounded">image</span>
+        </button>
+        <input type="file" id="image-file-input" accept="image/*" class="hidden">
+        <button id="sendBtn">
+          <span class="material-symbols-rounded">send</span>
+        </button>
+      </div>
     </div>
     <div id="loader" class="hidden"></div>
     <div id="toast-container"></div>

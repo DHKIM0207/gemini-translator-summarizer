@@ -492,64 +492,112 @@ window.addEventListener("message", (event) => {
   }
 });
 
-// 호버 번역 버튼 관련 변수
-let hoverTranslateButton = null;
-let hideHoverButtonTimeout = null;
+// 선택 영역 툴바 관련 변수
+let selectionToolbar = null;
+let hideToolbarTimeout = null;
 
-// 호버 번역 버튼 생성
-function createHoverTranslateButton() {
-  if (!hoverTranslateButton) {
-    hoverTranslateButton = document.createElement('button');
-    hoverTranslateButton.id = 'selection-translate-hover-btn';
-    hoverTranslateButton.style.cssText = `
+// 선택 영역 툴바 생성
+function createSelectionToolbar() {
+  if (!selectionToolbar) {
+    selectionToolbar = document.createElement('div');
+    selectionToolbar.id = 'selection-toolbar';
+    selectionToolbar.style.cssText = `
       position: fixed;
-      width: 42px;
-      height: 42px;
-      border-radius: 50%;
-      background-color: #1a73e8;
-      color: white;
-      border: none;
-      cursor: pointer;
       display: none;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      background-color: #ffffff;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      padding: 4px;
       z-index: 10000;
-      transition: transform 0.2s;
+      gap: 4px;
+      flex-direction: row;
+      align-items: center;
     `;
-    hoverTranslateButton.innerHTML = '<span class="material-symbols-outlined" style="color: white !important; font-size: 24px; line-height: 1;">language_korean_latin</span>';
-    hoverTranslateButton.addEventListener('click', handleHoverTranslateClick);
-    document.body.appendChild(hoverTranslateButton);
+    
+    // 번역 버튼
+    const translateBtn = document.createElement('button');
+    translateBtn.id = 'toolbar-translate-btn';
+    translateBtn.setAttribute('data-tooltip', chrome.i18n.getMessage('translateTooltip') || '번역');
+    translateBtn.style.cssText = `
+      background-color: transparent;
+      color: #374151;
+      border: none;
+      border-radius: 6px;
+      width: 36px;
+      height: 36px;
+      padding: 0;
+      cursor: pointer;
+      transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+    `;
+    translateBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px !important; line-height: 1;">translate</span>';
+    translateBtn.addEventListener('click', handleTranslateClick);
+    translateBtn.addEventListener('mouseenter', () => {
+      translateBtn.style.backgroundColor = '#f3f4f6';
+      translateBtn.style.color = '#3b82f6';
+    });
+    translateBtn.addEventListener('mouseleave', () => {
+      translateBtn.style.backgroundColor = 'transparent';
+      translateBtn.style.color = '#374151';
+    });
+    
+    // 검색 버튼
+    const searchBtn = document.createElement('button');
+    searchBtn.id = 'toolbar-search-btn';
+    searchBtn.setAttribute('data-tooltip', chrome.i18n.getMessage('searchTooltip') || '검색');
+    searchBtn.style.cssText = translateBtn.style.cssText;
+    searchBtn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 20px !important; line-height: 1;">search</span>';
+    searchBtn.addEventListener('click', handleSearchClick);
+    searchBtn.addEventListener('mouseenter', () => {
+      searchBtn.style.backgroundColor = '#f3f4f6';
+      searchBtn.style.color = '#3b82f6';
+    });
+    searchBtn.addEventListener('mouseleave', () => {
+      searchBtn.style.backgroundColor = 'transparent';
+      searchBtn.style.color = '#374151';
+    });
+    
+    selectionToolbar.appendChild(translateBtn);
+    selectionToolbar.appendChild(searchBtn);
+    document.body.appendChild(selectionToolbar);
   }
 }
 
-// 호버 번역 버튼 표시
-function showHoverTranslateButton(x, y) {
-  if (!hoverTranslateButton) {
-    createHoverTranslateButton();
+// 선택 영역 툴바 표시
+function showSelectionToolbar(x, y) {
+  if (!selectionToolbar) {
+    createSelectionToolbar();
   }
-  hoverTranslateButton.style.left = `${x}px`;
-  hoverTranslateButton.style.top = `${y}px`;
-  hoverTranslateButton.style.display = 'flex';
+  selectionToolbar.style.left = `${x}px`;
+  selectionToolbar.style.top = `${y}px`;
+  selectionToolbar.style.display = 'flex';
   
-  // 타이머 설정하지 않음 - 드래그 중에는 사라지지 않도록
-  clearTimeout(hideHoverButtonTimeout);
+  clearTimeout(hideToolbarTimeout);
 }
 
-// 호버 번역 버튼 숨기기
-function hideHoverTranslateButton() {
-  if (hoverTranslateButton) {
-    hoverTranslateButton.style.display = 'none';
+// 선택 영역 툴바 숨기기
+function hideSelectionToolbar() {
+  if (selectionToolbar) {
+    selectionToolbar.style.display = 'none';
   }
-  clearTimeout(hideHoverButtonTimeout);
+  clearTimeout(hideToolbarTimeout);
 }
 
-// 호버 번역 버튼 클릭 처리
-function handleHoverTranslateClick(event) {
+// 선택된 텍스트 가져오기
+function getSelectedText() {
+  return window.getSelection().toString().trim();
+}
+
+// 번역 버튼 클릭 처리
+function handleTranslateClick(event) {
   event.stopPropagation();
-  const selectedText = window.getSelection().toString().trim();
+  const selectedText = getSelectedText();
   if (!selectedText) {
-    hideHoverTranslateButton();
+    hideSelectionToolbar();
     return;
   }
   
@@ -569,12 +617,40 @@ function handleHoverTranslateClick(event) {
     }
   }, 100);
   
-  hideHoverTranslateButton();
+  hideSelectionToolbar();
+}
+
+// 검색 버튼 클릭 처리
+function handleSearchClick(event) {
+  event.stopPropagation();
+  const selectedText = getSelectedText();
+  if (!selectedText) {
+    hideSelectionToolbar();
+    return;
+  }
+  
+  // 챗봇이 열려있지 않으면 열기
+  if (!iframeVisible) {
+    toggleChatbot();
+  }
+  
+  // 선택된 텍스트 검색 요청 전송
+  setTimeout(() => {
+    if (chatbotIframe && chatbotIframe.contentWindow) {
+      const chatbotOrigin = new URL(chrome.runtime.getURL('chatbot_ui/chatbot.html')).origin;
+      chatbotIframe.contentWindow.postMessage({
+        type: "SEARCH_FROM_HOVER",
+        searchText: selectedText
+      }, chatbotOrigin);
+    }
+  }, 100);
+  
+  hideSelectionToolbar();
 }
 
 // 마우스 이벤트 리스너 추가
 document.addEventListener('mouseup', (event) => {
-  if (hoverTranslateButton && hoverTranslateButton.contains(event.target)) {
+  if (selectionToolbar && selectionToolbar.contains(event.target)) {
     return;
   }
   
@@ -588,24 +664,24 @@ document.addEventListener('mouseup', (event) => {
       const rect = range.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
       
-      const btnX = scrollX + rect.right - 21;
-        const btnY = scrollY + rect.bottom;
-      showHoverTranslateButton(btnX, btnY);
+      const toolbarX = window.scrollX + rect.left + (rect.width / 2) - 40;
+      const toolbarY = window.scrollY + rect.bottom + 5;
+      showSelectionToolbar(toolbarX, toolbarY);
     }
   }, 50);
 });
 
-// 선택 영역이 변경되면 버튼 숨기기
+// 선택 영역이 변경되면 툴바 숨기기
 document.addEventListener('selectionchange', () => {
   const selection = window.getSelection();
   if (!selection || selection.isCollapsed || !selection.toString().trim()) {
-    hideHoverTranslateButton();
+    hideSelectionToolbar();
   }
 });
 
-// 클릭 시 선택 영역이 해제되면 버튼 숨기기
+// 클릭 시 선택 영역이 해제되면 툴바 숨기기
 document.addEventListener('click', (event) => {
-  if (hoverTranslateButton && hoverTranslateButton.contains(event.target)) {
+  if (selectionToolbar && selectionToolbar.contains(event.target)) {
     return;
   }
   
@@ -613,7 +689,7 @@ document.addEventListener('click', (event) => {
   setTimeout(() => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed || !selection.toString().trim()) {
-      hideHoverTranslateButton();
+      hideSelectionToolbar();
     }
   }, 100);
 });

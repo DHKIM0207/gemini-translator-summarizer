@@ -38,6 +38,9 @@
   "searchTooltip": {
     "message": "搜索"
   },
+  "searchToggle": {
+    "message": "网络搜索"
+  },
   "messageInputPlaceholder": {
     "message": "输入您的消息..."
   },
