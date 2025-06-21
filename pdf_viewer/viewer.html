@@ -13,6 +13,13 @@
   <div id="pdf-container">
     <div id="pdf-header">
       <div class="header-left">
+        <button id="toggle-outline" title="목차">
+          <span class="material-symbols-rounded">list</span>
+        </button>
+        <span id="pdf-title">PDF 문서</span>
+      </div>
+      
+      <div class="header-center">
         <button id="prev-page" title="이전 페이지">
           <span class="material-symbols-rounded">chevron_left</span>
         </button>
@@ -24,30 +31,81 @@
         <button id="next-page" title="다음 페이지">
           <span class="material-symbols-rounded">chevron_right</span>
         </button>
-      </div>
-      
-      <div class="header-center">
-        <span id="pdf-title">PDF 문서</span>
-      </div>
-      
-      <div class="header-right">
+        <div class="header-separator"></div>
         <button id="zoom-out" title="축소">
-          <span class="material-symbols-rounded">zoom_out</span>
+          <span class="zoom-icon">-</span>
         </button>
         <span id="zoom-level">100%</span>
         <button id="zoom-in" title="확대">
-          <span class="material-symbols-rounded">zoom_in</span>
+          <span class="zoom-icon">+</span>
         </button>
-        <button id="fit-page" title="페이지 맞춤">
-          <span class="material-symbols-rounded">fit_screen</span>
+        <button id="fit-page" title="너비에 맞추기">
+          <span class="material-symbols-outlined">fit_page_width</span>
+        </button>
+        <div class="header-separator"></div>
+        <button id="rotate-page" title="회전">
+          <span class="material-symbols-rounded">rotate_right</span>
+        </button>
+        <button id="page-view-mode" title="페이지 보기 모드">
+          <span class="material-symbols-rounded">auto_stories</span>
+        </button>
+      </div>
+      
+      <div class="header-right">
+        <button id="translate-page" title="현재 페이지 번역">
+          <span class="material-symbols-rounded">translate</span>
+        </button>
+        <button id="summarize-page" title="현재 페이지 요약">
+          <span class="material-symbols-rounded">summarize</span>
+        </button>
+        <button id="summarize-full" title="전체 PDF 요약">
+          <span class="material-symbols-rounded">auto_awesome</span>
+        </button>
+        <div class="header-separator"></div>
+        <button id="print-pdf" title="인쇄">
+          <span class="material-symbols-rounded">print</span>
+        </button>
+        <button id="download-pdf" title="다운로드">
+          <span class="material-symbols-rounded">download</span>
+        </button>
+        <button id="toggle-fullscreen" title="전체화면">
+          <span class="material-symbols-rounded">fullscreen</span>
         </button>
       </div>
     </div>
     
     <div id="pdf-viewer">
-      <div id="pdf-render-container">
-        <canvas id="pdf-canvas"></canvas>
-        <div id="text-layer" class="textLayer"></div>
+      <div id="outline-sidebar" class="hidden">
+        <div class="outline-header">
+          <h3>목차</h3>
+          <div class="outline-view-toggle">
+            <button id="preview-view-btn" class="view-btn active" title="미리보기">
+              <span class="material-symbols-rounded">grid_view</span>
+            </button>
+            <button id="list-view-btn" class="view-btn" title="목록">
+              <span class="material-symbols-rounded">view_list</span>
+            </button>
+          </div>
+          <button id="close-outline" title="닫기">
+            <span class="material-symbols-rounded">close</span>
+          </button>
+        </div>
+        <div id="outline-content">
+          <div class="outline-loading">
+            <div class="spinner-small"></div>
+            <p>목차 로딩 중...</p>
+          </div>
+        </div>
+      </div>
+      <div id="pdf-render-container" class="single-page">
+        <div class="page-container" id="main-page-container">
+          <canvas id="pdf-canvas"></canvas>
+          <div id="text-layer" class="textLayer"></div>
+        </div>
+        <div class="page-container" id="second-page-container" style="display: none;">
+          <canvas id="pdf-canvas-2"></canvas>
+          <div id="text-layer-2" class="textLayer"></div>
+        </div>
       </div>
     </div>
     

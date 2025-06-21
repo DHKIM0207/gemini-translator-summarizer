@@ -106,3 +106,8 @@ Messages stored in `_locales/[lang]/messages.json`
 - ArXiv PDF support
 - Improved drag translation icon positioning
 - Enhanced PDF viewer loading
+
+## Development Guidelines
+- Always implement internationalization (i18n) when creating UI or text elements
+  - Ensure all text is processed through localization system before rendering
+  - Use `i18n-helper.js` for consistent multi-language support

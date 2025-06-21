@@ -223,6 +223,32 @@ async function initializeChatbot() {
         addMessageToUI("호버 버튼에서 전달된 텍스트가 없습니다.", false, true);
         loader.classList.add('hidden');
       }
+    } else if (request.type === "TRANSLATE_PDF_PAGE") {
+      loader.classList.remove('hidden');
+      if (request.pageText) {
+        addMessageToUI(`[PDF 페이지 ${request.pageNumber}] 번역 요청됨`, true);
+        handleTranslateSelectedText(request.pageText); // PDF 페이지 텍스트 번역
+      } else {
+        addMessageToUI("번역할 페이지 텍스트가 없습니다.", false, true);
+        loader.classList.add('hidden');
+      }
+    } else if (request.type === "SUMMARIZE_PDF_PAGE") {
+      loader.classList.remove('hidden');
+      if (request.pageText) {
+        addMessageToUI(`[PDF 페이지 ${request.pageNumber}] 요약 요청됨`, true);
+        handleSummarizeContent(request.pageText); // PDF 페이지 텍스트 요약
+      } else {
+        addMessageToUI("요약할 페이지 텍스트가 없습니다.", false, true);
+        loader.classList.add('hidden');
+      }
+    } else if (request.type === "SUMMARIZE_PDF_FULL") {
+      loader.classList.remove('hidden');
+      if (request.pageText) {
+        handleSummarizeFullPDF(request.pageText, request.totalPages, request.summarizedPages);
+      } else {
+        addMessageToUI("요약할 PDF 텍스트가 없습니다.", false, true);
+        loader.classList.add('hidden');
+      }
     } else if (request.type === "IS_PDF_VIEWER_RESULT" || request.type === "PDF_PAGE_CONTENT_RESULT" || request.type === "PDF_PAGE_CONTENT_ERROR") {
       // PDF 뷰어 관련 응답은 Promise 리스너에서 처리되므로 여기서는 무시
       return;
@@ -457,7 +483,18 @@ async function handleSummarizePage() {
         loader.classList.add('hidden');
         return;
       }
-      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} ${getMessage(currentMessages, 'summarizePrompt')}\n\nPDF Page ${currentPage}:\n${pageContent}`;
+      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} 다음 PDF 페이지 ${currentPage}의 내용을 구조적으로 요약해주세요.
+
+요약 형식:
+1. **페이지 개요** (1-2문장으로 핵심 내용 요약)
+2. **주요 내용**
+   - 중요한 포인트를 번호로 정리
+   - 필요시 세부사항을 하위 항목으로 추가
+3. **핵심 키워드** (있는 경우)
+   - 페이지의 주요 개념이나 용어
+
+PDF 페이지 ${currentPage} 내용:
+${pageContent}`;
       await streamResponse(prompt);
     } catch (error) {
       addMessageToUI(getMessage(currentMessages, 'pdfSummarizeError') + ': ' + error.message, false, true);
@@ -474,7 +511,18 @@ async function handleSummarizePage() {
         loader.classList.add('hidden');
         return;
       }
-      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} ${getMessage(currentMessages, 'summarizePrompt')}\n\n${pageContent}`;
+      const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} 다음 웹페이지 내용을 구조적으로 요약해주세요.
+
+요약 형식:
+1. **페이지 개요** (1-2문장으로 핵심 내용 요약)
+2. **주요 내용**
+   - 중요한 포인트를 번호로 정리
+   - 필요시 세부사항을 하위 항목으로 추가
+3. **핵심 키워드** (있는 경우)
+   - 페이지의 주요 개념이나 용어
+
+웹페이지 내용:
+${pageContent}`;
       await streamResponse(prompt);
     } catch (error) {
       addMessageToUI(getMessage(currentMessages, 'pageSummarizeError') + ': ' + error.message, false, true);
@@ -564,6 +612,81 @@ async function handleTranslateSelectedText(textToTranslate = null) {
     await streamResponse(prompt);
   } catch (error) {
     addMessageToUI(getMessage(currentMessages, 'translateSelectionError') + ': ' + error.message, false, true);
+    loader.classList.add('hidden');
+  }
+}
+
+// 요약 함수 추가
+async function handleSummarizeContent(textToSummarize) {
+  if (!chatSession && !startNewChatSession()) return;
+
+  loader.classList.remove('hidden');
+  try {
+    if (!textToSummarize || textToSummarize.trim().length === 0) {
+      addMessageToUI("요약할 텍스트가 없습니다.", false, true);
+      loader.classList.add('hidden');
+      return;
+    }
+
+    // 요약할 텍스트가 있는 경우 사용자에게 표시
+    const displayText = textToSummarize.length > 100 ? textToSummarize.substring(0, 100) + "..." : textToSummarize;
+    addMessageToUI(`요약 요청: "${displayText}"`, true);
+
+    const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} 다음 텍스트를 구조적으로 요약해주세요.
+
+요약 형식:
+1. **페이지 개요** (1-2문장으로 핵심 내용 요약)
+2. **주요 내용**
+   - 중요한 포인트를 번호로 정리
+   - 필요시 세부사항을 하위 항목으로 추가
+3. **핵심 키워드** (있는 경우)
+   - 페이지의 주요 개념이나 용어
+
+텍스트 내용:
+${textToSummarize}`;
+    
+    await streamResponse(prompt);
+  } catch (error) {
+    addMessageToUI('요약 중 오류: ' + error.message, false, true);
+    loader.classList.add('hidden');
+  }
+}
+
+// 전체 PDF 요약 함수
+async function handleSummarizeFullPDF(textToSummarize, totalPages, summarizedPages) {
+  if (!chatSession && !startNewChatSession()) return;
+
+  loader.classList.remove('hidden');
+  try {
+    if (!textToSummarize || textToSummarize.trim().length === 0) {
+      addMessageToUI("요약할 텍스트가 없습니다.", false, true);
+      loader.classList.add('hidden');
+      return;
+    }
+
+    // 요약 요청 메시지 표시
+    const message = totalPages > summarizedPages 
+      ? `[전체 PDF 요약] 총 ${totalPages}페이지 중 ${summarizedPages}페이지 요약 요청됨`
+      : `[전체 PDF 요약] 총 ${totalPages}페이지 요약 요청됨`;
+    addMessageToUI(message, true);
+
+    const prompt = `${getMessage(currentMessages, 'generalPromptPrefix')} 다음은 PDF 문서의 전체 내용입니다. 이를 구조적이고 체계적으로 요약해주세요.
+
+요약 형식:
+1. **문서 개요** (2-3문장으로 전체 내용 요약)
+2. **주요 내용**
+   - 핵심 주제별로 번호를 매겨 정리
+   - 각 주제에 대해 중요한 세부사항을 하위 항목으로 포함
+3. **핵심 요점**
+   - 가장 중요한 포인트 3-5개를 간단명료하게 정리
+4. **결론/시사점** (있는 경우)
+
+PDF 내용:
+${textToSummarize}`;
+
+    await streamResponse(prompt);
+  } catch (error) {
+    addMessageToUI('전체 PDF 요약 중 오류: ' + error.message, false, true);
     loader.classList.add('hidden');
   }
 }

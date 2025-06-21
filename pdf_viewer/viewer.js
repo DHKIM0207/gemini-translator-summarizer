@@ -11,9 +11,15 @@ let pageNum = 1;
 let pageRendering = false;
 let pageNumPending = null;
 let scale = 1.0;
+let rotation = 0; // 회전 각도 (0, 90, 180, 270)
+let pageViewMode = 'single'; // 'single' 또는 'double'
+let fitMode = 'none'; // 'width' 또는 'none'
 let canvas = document.getElementById('pdf-canvas');
 let ctx = canvas.getContext('2d');
 let textLayer = document.getElementById('text-layer');
+let canvas2 = document.getElementById('pdf-canvas-2');
+let ctx2 = canvas2.getContext('2d');
+let textLayer2 = document.getElementById('text-layer-2');
 
 // UI 요소들
 const prevButton = document.getElementById('prev-page');
@@ -126,6 +132,10 @@ async function loadPdf(url) {
       document.title = `${decodeURIComponent(filename)} - PDF 뷰어`;
     }
     
+    // 초기 실제 크기(100%) 설정
+    scale = 1.0;
+    zoomLevelSpan.textContent = '100%';
+    
     // 첫 페이지 렌더링
     renderPage(pageNum);
     
@@ -143,15 +153,40 @@ async function renderPage(num) {
   console.log(`페이지 ${num} 렌더링 시작`);
   
   try {
-    const page = await pdfDoc.getPage(num);
-    const viewport = page.getViewport({ scale: scale });
+    // 첫 번째 페이지 렌더링
+    await renderSinglePage(num, canvas, ctx, textLayer);
+    
+    // 더블 페이지 모드인 경우 두 번째 페이지도 렌더링
+    if (pageViewMode === 'double' && num < pdfDoc.numPages) {
+      secondPageContainer.style.display = 'block';
+      await renderSinglePage(num + 1, canvas2, ctx2, textLayer2);
+    } else {
+      secondPageContainer.style.display = 'none';
+    }
+  } catch (error) {
+    console.error('페이지 렌더링 오류:', error);
+  } finally {
+    pageRendering = false;
+    
+    if (pageNumPending !== null) {
+      renderPage(pageNumPending);
+      pageNumPending = null;
+    }
+  }
+}
+
+// 단일 페이지 렌더링
+async function renderSinglePage(pageNumber, targetCanvas, targetCtx, targetTextLayer) {
+  try {
+    const page = await pdfDoc.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: scale, rotation: rotation });
     console.log('Viewport:', viewport.width, 'x', viewport.height);
     
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
+    targetCanvas.height = viewport.height;
+    targetCanvas.width = viewport.width;
     
     const renderContext = {
-      canvasContext: ctx,
+      canvasContext: targetCtx,
       viewport: viewport
     };
     
@@ -159,13 +194,13 @@ async function renderPage(num) {
     await renderTask.promise;
     
     // 텍스트 레이어 렌더링
-    textLayer.innerHTML = '';
-    textLayer.style.width = viewport.width + 'px';
-    textLayer.style.height = viewport.height + 'px';
+    targetTextLayer.innerHTML = '';
+    targetTextLayer.style.width = viewport.width + 'px';
+    targetTextLayer.style.height = viewport.height + 'px';
     
     // 텍스트 레이어는 절대 위치로 캔버스 위에 배치됨
-    textLayer.style.left = '0';
-    textLayer.style.top = '0';
+    targetTextLayer.style.left = '0';
+    targetTextLayer.style.top = '0';
     
     const textContent = await page.getTextContent();
     
@@ -174,7 +209,7 @@ async function renderPage(num) {
       console.log('새로운 TextLayer API 사용');
       const textLayerInstance = new pdfjsLib.TextLayer({
         textContentSource: textContent,
-        container: textLayer,
+        container: targetTextLayer,
         viewport: viewport
       });
       await textLayerInstance.render();
@@ -182,7 +217,7 @@ async function renderPage(num) {
       console.log('기존 renderTextLayer API 사용');
       const textLayerRenderTask = pdfjsLib.renderTextLayer({
         textContent: textContent,
-        container: textLayer,
+        container: targetTextLayer,
         viewport: viewport,
         textDivs: []
       });
@@ -190,12 +225,12 @@ async function renderPage(num) {
     }
     
     // 텍스트 선택 가능하도록 설정
-    textLayer.style.pointerEvents = 'auto';
-    textLayer.style.userSelect = 'text';
-    textLayer.style.cursor = 'text';
+    targetTextLayer.style.pointerEvents = 'auto';
+    targetTextLayer.style.userSelect = 'text';
+    targetTextLayer.style.cursor = 'text';
     
     // 텍스트 레이어의 각 span 요소에도 스타일 적용
-    const textSpans = textLayer.querySelectorAll('span');
+    const textSpans = targetTextLayer.querySelectorAll('span');
     textSpans.forEach(span => {
       span.style.userSelect = 'text';
       span.style.cursor = 'text';
@@ -209,16 +244,9 @@ async function renderPage(num) {
       console.log('선택 가능 테스트:', testSelection.toString());
     }, 100);
     
-    pageRendering = false;
     loadingIndicator.classList.add('hidden');
-    
-    if (pageNumPending !== null) {
-      renderPage(pageNumPending);
-      pageNumPending = null;
-    }
   } catch (error) {
-    console.error('페이지 렌더링 오류:', error);
-    pageRendering = false;
+    console.error(`페이지 ${pageNumber} 렌더링 오류:`, error);
     loadingIndicator.classList.add('hidden');
   }
 }
@@ -234,14 +262,28 @@ function queueRenderPage(num) {
 
 function onPrevPage() {
   if (pageNum <= 1) return;
-  pageNum--;
+  
+  if (pageViewMode === 'double') {
+    // 더블 페이지 모드에서는 2페이지씩 이동
+    pageNum = Math.max(1, pageNum - 2);
+  } else {
+    pageNum--;
+  }
+  
   pageNumInput.value = pageNum;
   queueRenderPage(pageNum);
 }
 
 function onNextPage() {
   if (pageNum >= pdfDoc.numPages) return;
-  pageNum++;
+  
+  if (pageViewMode === 'double') {
+    // 더블 페이지 모드에서는 2페이지씩 이동
+    pageNum = Math.min(pdfDoc.numPages, pageNum + 2);
+  } else {
+    pageNum++;
+  }
+  
   pageNumInput.value = pageNum;
   queueRenderPage(pageNum);
 }
@@ -250,22 +292,57 @@ function onNextPage() {
 function zoomIn() {
   scale = Math.min(scale * 1.2, 3.0);
   zoomLevelSpan.textContent = Math.round(scale * 100) + '%';
+  
+  // 수동 줌 시 현재 상태가 너비 맞춤이면 해제
+  if (fitMode === 'width') {
+    fitMode = 'none';
+    fitPageButton.title = '너비에 맞추기';
+    fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
+  }
+  
   queueRenderPage(pageNum);
 }
 
 function zoomOut() {
   scale = Math.max(scale / 1.2, 0.5);
   zoomLevelSpan.textContent = Math.round(scale * 100) + '%';
+  
+  // 수동 줌 시 현재 상태가 너비 맞춤이면 해제
+  if (fitMode === 'width') {
+    fitMode = 'none';
+    fitPageButton.title = '너비에 맞추기';
+    fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
+  }
+  
   queueRenderPage(pageNum);
 }
 
 function fitPage() {
+  // 토글: none (실제 크기) <-> width (너비에 맞추기)
   const container = document.getElementById('pdf-viewer');
   const containerWidth = container.clientWidth - 40; // padding 고려
   
   pdfDoc.getPage(pageNum).then(page => {
-    const viewport = page.getViewport({ scale: 1.0 });
-    scale = containerWidth / viewport.width;
+    const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
+    
+    if (fitMode === 'none') {
+      // 실제 크기에서 너비에 맞추기로 전환
+      fitMode = 'width';
+      let targetWidth = containerWidth;
+      if (pageViewMode === 'double') {
+        targetWidth = (containerWidth - 20) / 2; // gap 고려
+      }
+      scale = targetWidth / viewport.width;
+      fitPageButton.title = '실제 크기';
+      fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_screen';
+    } else {
+      // 너비에 맞추기에서 실제 크기로 전환
+      fitMode = 'none';
+      scale = 1.0;
+      fitPageButton.title = '너비에 맞추기';
+      fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
+    }
+    
     zoomLevelSpan.textContent = Math.round(scale * 100) + '%';
     queueRenderPage(pageNum);
   });
@@ -630,6 +707,460 @@ window.addEventListener('message', async (event) => {
         error: error.message,
         requestId: requestId
       }, event.origin);
+    }
+  }
+});
+
+// 새로운 버튼 요소들
+const toggleOutlineButton = document.getElementById('toggle-outline');
+const closeOutlineButton = document.getElementById('close-outline');
+const outlineSidebar = document.getElementById('outline-sidebar');
+const outlineContent = document.getElementById('outline-content');
+const pdfViewer = document.getElementById('pdf-viewer');
+const printButton = document.getElementById('print-pdf');
+const downloadButton = document.getElementById('download-pdf');
+const fullscreenButton = document.getElementById('toggle-fullscreen');
+const pdfContainer = document.getElementById('pdf-container');
+const previewViewBtn = document.getElementById('preview-view-btn');
+const listViewBtn = document.getElementById('list-view-btn');
+const rotateButton = document.getElementById('rotate-page');
+const pageViewModeButton = document.getElementById('page-view-mode');
+const pdfRenderContainer = document.getElementById('pdf-render-container');
+const mainPageContainer = document.getElementById('main-page-container');
+const secondPageContainer = document.getElementById('second-page-container');
+const translateButton = document.getElementById('translate-page');
+const summarizeButton = document.getElementById('summarize-page');
+const summarizeFullButton = document.getElementById('summarize-full');
+
+// 현재 뷰 모드 (기본값: 미리보기)
+let currentViewMode = 'preview';
+
+// 뷰 모드 전환
+previewViewBtn.addEventListener('click', () => {
+  if (currentViewMode !== 'preview') {
+    currentViewMode = 'preview';
+    previewViewBtn.classList.add('active');
+    listViewBtn.classList.remove('active');
+    if (pdfDoc) {
+      loadOutline();
+    }
+  }
+});
+
+listViewBtn.addEventListener('click', () => {
+  if (currentViewMode !== 'list') {
+    currentViewMode = 'list';
+    listViewBtn.classList.add('active');
+    previewViewBtn.classList.remove('active');
+    if (pdfDoc) {
+      loadOutline();
+    }
+  }
+});
+
+// 목차 토글
+toggleOutlineButton.addEventListener('click', () => {
+  outlineSidebar.classList.toggle('hidden');
+  pdfViewer.classList.toggle('with-sidebar');
+  
+  // 목차가 열릴 때 로드
+  if (!outlineSidebar.classList.contains('hidden') && pdfDoc) {
+    loadOutline();
+  }
+});
+
+// 목차 닫기
+closeOutlineButton.addEventListener('click', () => {
+  outlineSidebar.classList.add('hidden');
+  pdfViewer.classList.remove('with-sidebar');
+});
+
+// 목차 로드
+async function loadOutline() {
+  if (!pdfDoc) return;
+  
+  outlineContent.innerHTML = '<div class="outline-loading"><div class="spinner-small"></div><p>로딩 중...</p></div>';
+  
+  if (currentViewMode === 'preview') {
+    // 미리보기 모드: 모든 페이지의 썸네일 표시
+    try {
+      outlineContent.innerHTML = '';
+      const previewGrid = document.createElement('div');
+      previewGrid.className = 'preview-grid';
+      outlineContent.appendChild(previewGrid);
+      
+      // 모든 페이지의 썸네일 생성
+      for (let i = 1; i <= pdfDoc.numPages; i++) {
+        renderPageThumbnail(i, previewGrid);
+      }
+    } catch (error) {
+      console.error('미리보기 로드 오류:', error);
+      outlineContent.innerHTML = '<div class="outline-empty">미리보기를 불러올 수 없습니다.</div>';
+    }
+  } else {
+    // 목록 모드: 기존 목차 표시
+    try {
+      const outline = await pdfDoc.getOutline();
+      
+      if (!outline || outline.length === 0) {
+        outlineContent.innerHTML = '<div class="outline-empty">이 PDF에는 목차가 없습니다.</div>';
+        return;
+      }
+      
+      outlineContent.innerHTML = '';
+      renderOutlineItems(outline, outlineContent, 1);
+    } catch (error) {
+      console.error('목차 로드 오류:', error);
+      outlineContent.innerHTML = '<div class="outline-empty">목차를 불러올 수 없습니다.</div>';
+    }
+  }
+}
+
+// 페이지 썸네일 렌더링
+async function renderPageThumbnail(pageNumber, container) {
+  try {
+    const page = await pdfDoc.getPage(pageNumber);
+    const viewport = page.getViewport({ scale: 0.3 }); // 작은 크기로 렌더링
+    
+    const previewItem = document.createElement('div');
+    previewItem.className = 'preview-item';
+    if (pageNumber === pageNum) {
+      previewItem.classList.add('active');
+    }
+    
+    const thumbnailDiv = document.createElement('div');
+    thumbnailDiv.className = 'preview-thumbnail';
+    
+    // Canvas 생성
+    const canvas = document.createElement('canvas');
+    const context = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    
+    // 페이지 렌더링
+    const renderContext = {
+      canvasContext: context,
+      viewport: viewport
+    };
+    
+    await page.render(renderContext).promise;
+    
+    thumbnailDiv.appendChild(canvas);
+    
+    // 페이지 번호 추가
+    const pageNumDiv = document.createElement('div');
+    pageNumDiv.className = 'preview-page-num';
+    pageNumDiv.textContent = pageNumber;
+    thumbnailDiv.appendChild(pageNumDiv);
+    
+    previewItem.appendChild(thumbnailDiv);
+    
+    // 페이지 라벨 (있는 경우)
+    const label = document.createElement('div');
+    label.className = 'preview-label';
+    label.textContent = `페이지 ${pageNumber}`;
+    previewItem.appendChild(label);
+    
+    // 클릭 이벤트
+    previewItem.addEventListener('click', () => {
+      pageNum = pageNumber;
+      queueRenderPage(pageNum);
+      
+      // 활성 상태 업데이트
+      document.querySelectorAll('.preview-item').forEach(item => item.classList.remove('active'));
+      previewItem.classList.add('active');
+    });
+    
+    container.appendChild(previewItem);
+  } catch (error) {
+    console.error(`페이지 ${pageNumber} 썸네일 렌더링 오류:`, error);
+  }
+}
+
+// 목차 아이템 렌더링
+function renderOutlineItems(items, container, level) {
+  items.forEach(item => {
+    const outlineItem = document.createElement('div');
+    outlineItem.className = `outline-item level-${level}`;
+    outlineItem.textContent = item.title;
+    
+    // 목차 클릭 시 해당 페이지로 이동
+    outlineItem.addEventListener('click', async () => {
+      if (item.dest) {
+        try {
+          const destination = await pdfDoc.getDestination(item.dest);
+          const pageIndex = await pdfDoc.getPageIndex(destination[0]);
+          pageNum = pageIndex + 1;
+          queueRenderPage(pageNum);
+          
+          // 현재 활성 아이템 표시
+          document.querySelectorAll('.outline-item').forEach(el => el.classList.remove('active'));
+          outlineItem.classList.add('active');
+        } catch (error) {
+          console.error('페이지 이동 오류:', error);
+        }
+      }
+    });
+    
+    container.appendChild(outlineItem);
+    
+    // 하위 아이템이 있으면 재귀적으로 렌더링
+    if (item.items && item.items.length > 0) {
+      renderOutlineItems(item.items, container, Math.min(level + 1, 3));
+    }
+  });
+}
+
+// 회전 기능
+rotateButton.addEventListener('click', () => {
+  rotation = (rotation + 90) % 360;
+  queueRenderPage(pageNum);
+});
+
+// 페이지 뷰 모드 전환
+pageViewModeButton.addEventListener('click', () => {
+  if (pageViewMode === 'single') {
+    pageViewMode = 'double';
+    pdfRenderContainer.classList.remove('single-page');
+    pdfRenderContainer.classList.add('double-page');
+    pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'menu_book';
+    pageViewModeButton.title = '단일 페이지';
+    
+    // 홀수 페이지로 조정
+    if (pageNum % 2 === 0) {
+      pageNum--;
+      pageNumInput.value = pageNum;
+    }
+  } else {
+    pageViewMode = 'single';
+    pdfRenderContainer.classList.remove('double-page');
+    pdfRenderContainer.classList.add('single-page');
+    pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'auto_stories';
+    pageViewModeButton.title = '두 페이지';
+  }
+  
+  queueRenderPage(pageNum);
+});
+
+// 인쇄 기능
+printButton.addEventListener('click', () => {
+  if (pdfDoc) {
+    window.print();
+  }
+});
+
+// 다운로드 기능
+downloadButton.addEventListener('click', async () => {
+  const pdfUrl = getPdfUrl();
+  if (!pdfUrl) return;
+  
+  try {
+    // PDF 파일명 추출
+    let filename = 'document.pdf';
+    if (pdfDoc && pdfDoc._pdfInfo && pdfDoc._pdfInfo.title) {
+      filename = pdfDoc._pdfInfo.title + '.pdf';
+    } else {
+      const urlParts = pdfUrl.split('/');
+      const lastPart = urlParts[urlParts.length - 1];
+      if (lastPart.includes('.pdf')) {
+        filename = decodeURIComponent(lastPart.split('?')[0]);
+      }
+    }
+    
+    // 다운로드 링크 생성
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = filename;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch (error) {
+    console.error('다운로드 오류:', error);
+  }
+});
+
+// 전체화면 토글
+fullscreenButton.addEventListener('click', () => {
+  if (!document.fullscreenElement) {
+    pdfContainer.requestFullscreen().then(() => {
+      pdfContainer.classList.add('fullscreen');
+      // 아이콘 변경
+      const icon = fullscreenButton.querySelector('.material-symbols-rounded');
+      if (icon) {
+        icon.textContent = 'fullscreen_exit';
+      }
+    }).catch(err => {
+      console.error('전체화면 전환 오류:', err);
+    });
+  } else {
+    document.exitFullscreen().then(() => {
+      pdfContainer.classList.remove('fullscreen');
+      // 아이콘 변경
+      const icon = fullscreenButton.querySelector('.material-symbols-rounded');
+      if (icon) {
+        icon.textContent = 'fullscreen';
+      }
+    });
+  }
+});
+
+// 번역 기능
+translateButton.addEventListener('click', async () => {
+  if (!pdfDoc) return;
+  
+  try {
+    // 현재 페이지의 텍스트 가져오기
+    let pageText = await getPageTextContent(pageNum);
+    
+    // 더블 페이지 모드인 경우 두 번째 페이지 텍스트도 가져오기
+    if (pageViewMode === 'double' && pageNum < pdfDoc.numPages) {
+      const secondPageText = await getPageTextContent(pageNum + 1);
+      pageText += '\n\n--- 다음 페이지 ---\n\n' + secondPageText;
+    }
+    
+    if (!pageText || pageText.trim().length === 0) {
+      alert('번역할 텍스트가 없습니다.');
+      return;
+    }
+    
+    // 챗봇이 열려있지 않으면 열기
+    if (!iframeVisible) {
+      toggleChatbot();
+    }
+    
+    // 챗봇에 번역 요청 전송
+    setTimeout(() => {
+      if (chatbotIframe && chatbotIframe.contentWindow) {
+        const chatbotOrigin = new URL(chrome.runtime.getURL('chatbot_ui/chatbot.html')).origin;
+        chatbotIframe.contentWindow.postMessage({
+          type: "TRANSLATE_PDF_PAGE",
+          pageText: pageText,
+          pageNumber: pageNum
+        }, chatbotOrigin);
+      }
+    }, 100);
+  } catch (error) {
+    console.error('페이지 번역 오류:', error);
+    alert('페이지 번역 중 오류가 발생했습니다.');
+  }
+});
+
+// 현재 페이지 요약 기능
+summarizeButton.addEventListener('click', async () => {
+  if (!pdfDoc) return;
+  
+  try {
+    // 현재 페이지의 텍스트 가져오기
+    let pageText = await getPageTextContent(pageNum);
+    
+    // 더블 페이지 모드인 경우 두 번째 페이지 텍스트도 가져오기
+    if (pageViewMode === 'double' && pageNum < pdfDoc.numPages) {
+      const secondPageText = await getPageTextContent(pageNum + 1);
+      pageText += '\n\n--- 다음 페이지 ---\n\n' + secondPageText;
+    }
+    
+    if (!pageText || pageText.trim().length === 0) {
+      alert('요약할 텍스트가 없습니다.');
+      return;
+    }
+    
+    // 챗봇이 열려있지 않으면 열기
+    if (!iframeVisible) {
+      toggleChatbot();
+    }
+    
+    // 챗봇에 요약 요청 전송
+    setTimeout(() => {
+      if (chatbotIframe && chatbotIframe.contentWindow) {
+        const chatbotOrigin = new URL(chrome.runtime.getURL('chatbot_ui/chatbot.html')).origin;
+        chatbotIframe.contentWindow.postMessage({
+          type: "SUMMARIZE_PDF_PAGE",
+          pageText: pageText,
+          pageNumber: pageNum
+        }, chatbotOrigin);
+      }
+    }, 100);
+  } catch (error) {
+    console.error('페이지 요약 오류:', error);
+    alert('페이지 요약 중 오류가 발생했습니다.');
+  }
+});
+
+// 전체 PDF 요약 기능
+summarizeFullButton.addEventListener('click', async () => {
+  if (!pdfDoc) return;
+  
+  try {
+    // 로딩 표시
+    summarizeFullButton.disabled = true;
+    const originalText = summarizeFullButton.querySelector('.material-symbols-rounded').textContent;
+    summarizeFullButton.querySelector('.material-symbols-rounded').textContent = 'hourglass_empty';
+    
+    // 전체 PDF 텍스트 가져오기
+    let fullText = '';
+    const totalPages = pdfDoc.numPages;
+    const maxPages = Math.min(totalPages, 30); // 30페이지로 제한
+    
+    for (let i = 1; i <= maxPages; i++) {
+      try {
+        const pageText = await getPageTextContent(i);
+        if (pageText && pageText.trim()) {
+          fullText += `\n\n--- 페이지 ${i} ---\n\n${pageText}`;
+        }
+      } catch (pageError) {
+        console.error(`페이지 ${i} 텍스트 추출 오류:`, pageError);
+      }
+    }
+    
+    if (!fullText || fullText.trim().length === 0) {
+      alert('요약할 텍스트가 없습니다.');
+      return;
+    }
+    
+    // 텍스트가 너무 길면 잘라내기 (약 20000자로 제한)
+    if (fullText.length > 20000) {
+      fullText = fullText.substring(0, 20000) + '\n\n[텍스트가 너무 길어 일부만 요약합니다]';
+    }
+    
+    // 챗봇이 열려있지 않으면 열기
+    if (!iframeVisible) {
+      toggleChatbot();
+    }
+    
+    // 챗봇에 요약 요청 전송
+    setTimeout(() => {
+      if (chatbotIframe && chatbotIframe.contentWindow) {
+        const chatbotOrigin = new URL(chrome.runtime.getURL('chatbot_ui/chatbot.html')).origin;
+        chatbotIframe.contentWindow.postMessage({
+          type: "SUMMARIZE_PDF_FULL",
+          pageText: fullText,
+          totalPages: totalPages,
+          summarizedPages: maxPages
+        }, chatbotOrigin);
+      }
+    }, 100);
+  } catch (error) {
+    console.error('PDF 전체 요약 오류:', error);
+    alert('PDF 요약 중 오류가 발생했습니다.');
+  } finally {
+    // 버튼 복원
+    summarizeFullButton.disabled = false;
+    summarizeFullButton.querySelector('.material-symbols-rounded').textContent = 'auto_awesome';
+  }
+});
+
+// 전체화면 변경 이벤트
+document.addEventListener('fullscreenchange', () => {
+  const icon = fullscreenButton.querySelector('.material-symbols-rounded');
+  if (!document.fullscreenElement) {
+    pdfContainer.classList.remove('fullscreen');
+    if (icon) {
+      icon.textContent = 'fullscreen';
+    }
+  } else {
+    if (icon) {
+      icon.textContent = 'fullscreen_exit';
     }
   }
 });
