@@ -12,14 +12,9 @@ let pageRendering = false;
 let pageNumPending = null;
 let scale = 1.0;
 let rotation = 0; // 회전 각도 (0, 90, 180, 270)
-let pageViewMode = 'single'; // 'single' 또는 'double'
+let pageViewMode = 'continuous'; // 'continuous', 'single' 또는 'double'
 let fitMode = 'none'; // 'width' 또는 'none'
-let canvas = document.getElementById('pdf-canvas');
-let ctx = canvas.getContext('2d');
-let textLayer = document.getElementById('text-layer');
-let canvas2 = document.getElementById('pdf-canvas-2');
-let ctx2 = canvas2.getContext('2d');
-let textLayer2 = document.getElementById('text-layer-2');
+// Canvas elements will be created dynamically for continuous mode
 
 // UI 요소들
 const prevButton = document.getElementById('prev-page');
@@ -34,7 +29,7 @@ const loadingIndicator = document.getElementById('loading-indicator');
 const errorMessage = document.getElementById('error-message');
 const errorText = document.getElementById('error-text');
 const pdfTitle = document.getElementById('pdf-title');
-const fabButton = document.getElementById('gemini-fab');
+// FAB button removed - using sidebar instead
 
 // URL에서 PDF 파일 경로 가져오기
 function getPdfUrl() {
@@ -136,8 +131,30 @@ async function loadPdf(url) {
     scale = 1.0;
     zoomLevelSpan.textContent = '100%';
     
-    // 첫 페이지 렌더링
-    renderPage(pageNum);
+    if (pageViewMode === 'continuous') {
+      // Continuous mode: create all page containers
+      await window.continuousScroll.createAllPageContainers();
+      
+      // Hide loading indicator
+      loadingIndicator.classList.add('hidden');
+      
+      // Simple initialization
+      const pdfRenderContainer = document.getElementById('pdf-render-container');
+      if (pdfRenderContainer) {
+        // Ensure we start at the top
+        pdfRenderContainer.scrollTop = 0;
+        
+        // Set initial page
+        pageNum = 1;
+        pageNumInput.value = 1;
+        
+        // Check visible pages immediately
+        window.continuousScroll.checkVisiblePages();
+      }
+    } else {
+      // 첫 페이지 렌더링
+      renderPage(pageNum);
+    }
     
   } catch (error) {
     console.error('PDF 로드 오류:', error);
@@ -149,28 +166,28 @@ async function loadPdf(url) {
 
 // 페이지 렌더링
 async function renderPage(num) {
-  pageRendering = true;
-  console.log(`페이지 ${num} 렌더링 시작`);
-  
-  try {
-    // 첫 번째 페이지 렌더링
-    await renderSinglePage(num, canvas, ctx, textLayer);
+  if (pageViewMode === 'continuous') {
+    // Continuous mode: scroll to page
+    window.continuousScroll.scrollToPage(num);
+    pageNum = num;
+    pageNumInput.value = num;
+  } else {
+    // Single/Double page mode (existing code)
+    pageRendering = true;
+    console.log(`페이지 ${num} 렌더링 시작`);
     
-    // 더블 페이지 모드인 경우 두 번째 페이지도 렌더링
-    if (pageViewMode === 'double' && num < pdfDoc.numPages) {
-      secondPageContainer.style.display = 'block';
-      await renderSinglePage(num + 1, canvas2, ctx2, textLayer2);
-    } else {
-      secondPageContainer.style.display = 'none';
-    }
-  } catch (error) {
-    console.error('페이지 렌더링 오류:', error);
-  } finally {
-    pageRendering = false;
-    
-    if (pageNumPending !== null) {
-      renderPage(pageNumPending);
-      pageNumPending = null;
+    try {
+      // TODO: Implement single/double page rendering
+      console.log('Single/Double page mode not yet implemented');
+    } catch (error) {
+      console.error('페이지 렌더링 오류:', error);
+    } finally {
+      pageRendering = false;
+      
+      if (pageNumPending !== null) {
+        renderPage(pageNumPending);
+        pageNumPending = null;
+      }
     }
   }
 }
@@ -271,7 +288,12 @@ function onPrevPage() {
   }
   
   pageNumInput.value = pageNum;
-  queueRenderPage(pageNum);
+  
+  if (pageViewMode === 'continuous') {
+    window.continuousScroll.scrollToPage(pageNum);
+  } else {
+    queueRenderPage(pageNum);
+  }
 }
 
 function onNextPage() {
@@ -285,7 +307,12 @@ function onNextPage() {
   }
   
   pageNumInput.value = pageNum;
-  queueRenderPage(pageNum);
+  
+  if (pageViewMode === 'continuous') {
+    window.continuousScroll.scrollToPage(pageNum);
+  } else {
+    queueRenderPage(pageNum);
+  }
 }
 
 // 줌 기능
@@ -300,27 +327,36 @@ function zoomIn() {
     fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
   }
   
-  queueRenderPage(pageNum);
+  if (pageViewMode === 'continuous') {
+    window.continuousScroll.rerenderAllPages();
+  } else {
+    queueRenderPage(pageNum);
+  }
 }
 
 function zoomOut() {
   scale = Math.max(scale / 1.2, 0.5);
   zoomLevelSpan.textContent = Math.round(scale * 100) + '%';
   
-  // 수동 줌 시 현재 상태가 너비 맞춤이면 해제
+  // 수동 줌 시 현재 상태가 너비 맿춤이면 해제
   if (fitMode === 'width') {
     fitMode = 'none';
     fitPageButton.title = chrome.i18n.getMessage('pdfViewerFitWidth');
     fitPageButton.querySelector('.material-symbols-outlined').textContent = 'fit_page_width';
   }
   
-  queueRenderPage(pageNum);
+  if (pageViewMode === 'continuous') {
+    window.continuousScroll.rerenderAllPages();
+  } else {
+    queueRenderPage(pageNum);
+  }
 }
 
 function fitPage() {
   // 토글: none (실제 크기) <-> width (너비에 맞추기)
-  const container = document.getElementById('pdf-viewer');
-  const containerWidth = container.clientWidth - 40; // padding 고려
+  const container = document.getElementById('pdf-render-container');
+  const chatbotWidth = parseInt(window.getComputedStyle(document.getElementById('chatbot-sidebar')).width, 10);
+  const containerWidth = window.innerWidth - chatbotWidth - 40; // chatbot sidebar and padding
   
   pdfDoc.getPage(pageNum).then(page => {
     const viewport = page.getViewport({ scale: 1.0, rotation: rotation });
@@ -344,7 +380,12 @@ function fitPage() {
     }
     
     zoomLevelSpan.textContent = Math.round(scale * 100) + '%';
-    queueRenderPage(pageNum);
+    
+    if (pageViewMode === 'continuous') {
+      window.continuousScroll.rerenderAllPages();
+    } else {
+      queueRenderPage(pageNum);
+    }
   });
 }
 
@@ -359,7 +400,11 @@ pageNumInput.addEventListener('change', () => {
   const num = parseInt(pageNumInput.value);
   if (num >= 1 && num <= pdfDoc.numPages) {
     pageNum = num;
-    queueRenderPage(pageNum);
+    if (pageViewMode === 'continuous') {
+      window.continuousScroll.scrollToPage(num);
+    } else {
+      queueRenderPage(pageNum);
+    }
   } else {
     pageNumInput.value = pageNum;
   }
@@ -390,9 +435,14 @@ document.addEventListener('keydown', (e) => {
   }
 });
 
-// 마우스휠 이벤트 처리 (Ctrl/Cmd + 휠로 줌)
+// 마우스휠 이벤트 처리
 document.addEventListener('wheel', (e) => {
+  // PDF 렌더 컨테이너 영역에서만 동작
+  const pdfRenderContainer = document.getElementById('pdf-render-container');
+  if (!pdfRenderContainer.contains(e.target)) return;
+  
   if (e.ctrlKey || e.metaKey) {
+    // Ctrl/Cmd + 휠로 줌
     e.preventDefault();
     
     // deltaY가 음수면 위로 스크롤 (확대), 양수면 아래로 스크롤 (축소)
@@ -401,239 +451,125 @@ document.addEventListener('wheel', (e) => {
     } else {
       zoomOut();
     }
+  } else {
+    // 일반 스크롤로 페이지 이동
+    const scrollContainer = pdfRenderContainer;
+    const scrollTop = scrollContainer.scrollTop;
+    const scrollHeight = scrollContainer.scrollHeight;
+    const clientHeight = scrollContainer.clientHeight;
+    
+    // 스크롤이 맨 위에 있고 위로 스크롤하면 이전 페이지
+    if (scrollTop === 0 && e.deltaY < 0) {
+      e.preventDefault();
+      onPrevPage();
+    }
+    // 스크롤이 맨 아래에 있고 아래로 스크롤하면 다음 페이지
+    else if (scrollTop + clientHeight >= scrollHeight - 1 && e.deltaY > 0) {
+      e.preventDefault();
+      onNextPage();
+    }
   }
 }, { passive: false });
 
 // 챗봇 iframe 관련 변수
 let chatbotIframe = null;
-let iframeVisible = false;
-let resizeHandle = null;
+let chatbotSidebar = null;
 let isResizing = false;
-let currentWidth = 450;
-const MIN_WIDTH = 350;
-let resizeOverlay = null;
+let startX = 0;
+let startWidth = 0;
 
-// 챗봇 iframe 생성 함수
-function createChatbotIframe() {
-  if (chatbotIframe) return;
+// 챗봇 iframe 초기화 함수
+function initializeChatbotIframe() {
+  chatbotIframe = document.getElementById('gemini-chatbot-iframe');
+  chatbotSidebar = document.getElementById('chatbot-sidebar');
+  if (chatbotIframe) {
+    chatbotIframe.src = chrome.runtime.getURL('chatbot_ui/chatbot.html');
+    chatbotIframe.setAttribute('allowfullscreen', '');
+    chatbotIframe.setAttribute('allow', 'clipboard-write');
+    
+    // iframe 로드 후 close 버튼 숨기기
+    chatbotIframe.onload = function() {
+      setTimeout(() => {
+        // PDF 뷰어에서는 close 버튼 숨기기 메시지 전송
+        const chatbotOrigin = new URL(chrome.runtime.getURL('chatbot_ui/chatbot.html')).origin;
+        chatbotIframe.contentWindow.postMessage({
+          type: 'HIDE_CLOSE_BUTTON',
+          isPdfViewer: true
+        }, chatbotOrigin);
+      }, 500);
+    };
+  }
   
-  chatbotIframe = document.createElement('iframe');
-  chatbotIframe.id = 'gemini-chatbot-iframe';
-  chatbotIframe.src = chrome.runtime.getURL('chatbot_ui/chatbot.html');
-  chatbotIframe.style.cssText = `
-    position: fixed;
-    top: 0;
-    right: 0;
-    width: 450px;
-    height: 100%;
-    border: none;
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.15);
-    z-index: 10000;
-    display: none;
-    background-color: white;
-    transition: transform 0.3s ease-out;
-    transform: translateX(100%);
-  `;
-  chatbotIframe.setAttribute('allowfullscreen', '');
-  chatbotIframe.setAttribute('allow', 'clipboard-write');
+  // 리사이즈 기능 초기화
+  if (chatbotSidebar) {
+    initializeSidebarResize();
+  }
+}
+
+// 사이드바 리사이즈 기능
+function initializeSidebarResize() {
+  const resizeHandle = chatbotSidebar;
   
-  // 저장된 너비가 있으면 복원
-  chrome.storage.local.get(['chatbotWidth'], (result) => {
-    if (result.chatbotWidth) {
-      currentWidth = result.chatbotWidth;
-      chatbotIframe.style.width = currentWidth + 'px';
-    } else {
-      // 기본값 설정
-      chatbotIframe.style.width = currentWidth + 'px';
+  resizeHandle.addEventListener('mousedown', (e) => {
+    // 리사이즈 핸들 영역 (왼쪽 5px)에서만 동작
+    const rect = resizeHandle.getBoundingClientRect();
+    if (e.clientX > rect.left + 5) return;
+    
+    isResizing = true;
+    startX = e.clientX;
+    startWidth = parseInt(window.getComputedStyle(chatbotSidebar).width, 10);
+    
+    // iframe의 포인터 이벤트 비활성화
+    chatbotIframe.style.pointerEvents = 'none';
+    document.body.style.cursor = 'ew-resize';
+    
+    e.preventDefault();
+  });
+  
+  document.addEventListener('mousemove', (e) => {
+    if (!isResizing) return;
+    
+    const width = startWidth - (e.clientX - startX);
+    const maxWidth = window.innerWidth * 0.5; // 50% of screen width
+    if (width >= 300 && width <= maxWidth) {
+      chatbotSidebar.style.width = width + 'px';
+      // PDF 콘텐츠 영역 조정
+      const pdfRenderContainer = document.getElementById('pdf-render-container');
+      if (pdfRenderContainer) {
+        pdfRenderContainer.style.right = width + 'px';
+      }
     }
   });
   
-  document.body.appendChild(chatbotIframe);
-  
-  // 리사이즈 핸들 생성
-  createResizeHandle();
-}
-
-// 리사이즈 핸들 생성
-function createResizeHandle() {
-  if (!resizeHandle) {
-    resizeHandle = document.createElement('div');
-    resizeHandle.id = 'gemini-resize-handle';
-    resizeHandle.style.cssText = `
-      position: fixed;
-      top: 0;
-      width: 5px;
-      height: 100%;
-      background-color: transparent;
-      cursor: ew-resize;
-      z-index: 10001;
-      display: none;
-    `;
-    
-    // 호버 효과
-    resizeHandle.addEventListener('mouseenter', () => {
-      resizeHandle.style.backgroundColor = 'rgba(59, 130, 246, 0.5)';
-    });
-    
-    resizeHandle.addEventListener('mouseleave', () => {
-      if (!isResizing) {
-        resizeHandle.style.backgroundColor = 'transparent';
-      }
-    });
-    
-    // 리사이즈 이벤트
-    resizeHandle.addEventListener('mousedown', startResize);
-    
-    document.body.appendChild(resizeHandle);
-  }
-}
-
-function startResize(e) {
-  isResizing = true;
-  resizeHandle.style.backgroundColor = 'rgba(59, 130, 246, 0.8)';
-  document.body.style.cursor = 'ew-resize';
-  document.body.style.userSelect = 'none';
-  
-  // 리사이즈 시작 시 현재 iframe의 실제 너비를 가져옴
-  if (chatbotIframe) {
-    const currentActualWidth = chatbotIframe.getBoundingClientRect().width;
-    currentWidth = currentActualWidth;
-    // iframe의 pointer-events를 일시적으로 비활성화
-    chatbotIframe.style.pointerEvents = 'none';
-  }
-  
-  // 빠른 드래그 시에도 이벤트를 놓치지 않도록 오버레이 생성
-  createResizeOverlay();
-  
-  e.preventDefault();
-}
-
-function doResize(e) {
-  if (!isResizing || !chatbotIframe) return;
-  
-  // 마우스 위치로부터 새로운 너비 계산
-  // iframe은 오른쪽에 고정되어 있으므로, 화면 너비에서 마우스 X 위치를 뺀 값
-  const newWidth = window.innerWidth - e.clientX;
-  const maxAllowedWidth = window.innerWidth * 0.9;
-  
-  if (newWidth >= MIN_WIDTH && newWidth <= maxAllowedWidth) {
-    currentWidth = Math.round(newWidth);
-    chatbotIframe.style.width = currentWidth + 'px';
-    // 리사이즈 핸들 위치도 실시간으로 업데이트
-    // 핸들의 중앙이 iframe의 왼쪽 가장자리에 위치하도록 설정
-    resizeHandle.style.left = Math.round(window.innerWidth - currentWidth - 5) + 'px';
-  } else if (newWidth < MIN_WIDTH) {
-    // 최소 너비로 제한
-    currentWidth = MIN_WIDTH;
-    chatbotIframe.style.width = MIN_WIDTH + 'px';
-    resizeHandle.style.left = Math.round(window.innerWidth - MIN_WIDTH - 5) + 'px';
-  } else if (newWidth > maxAllowedWidth) {
-    // 최대 너비로 제한
-    currentWidth = Math.round(maxAllowedWidth);
-    chatbotIframe.style.width = currentWidth + 'px';
-    resizeHandle.style.left = Math.round(window.innerWidth - maxAllowedWidth - 5) + 'px';
-  }
-}
-
-function stopResize() {
-  if (!isResizing) return;
-  
-  isResizing = false;
-  resizeHandle.style.backgroundColor = 'transparent';
-  document.body.style.cursor = '';
-  document.body.style.userSelect = '';
-  
-  // iframe의 pointer-events 복원
-  if (chatbotIframe) {
-    chatbotIframe.style.pointerEvents = '';
-  }
-  
-  // 오버레이 제거
-  removeResizeOverlay();
-  
-  // 너비 저장
-  chrome.storage.local.set({ chatbotWidth: currentWidth });
-  
-  // 최종 위치 업데이트
-  updateResizeHandlePosition();
-}
-
-function updateResizeHandlePosition() {
-  if (resizeHandle && chatbotIframe) {
-    // iframe의 현재 위치를 기반으로 리사이즈 핸들 위치 계산
-    // 핸들의 중앙이 iframe의 왼쪽 가장자리에 위치하도록 설정 (핸들 너비 5px의 절반인 2.5px 고려)
-    const iframeRect = chatbotIframe.getBoundingClientRect();
-    resizeHandle.style.left = (iframeRect.left - 2.5) + 'px';
-  }
-}
-
-function createResizeOverlay() {
-  if (!resizeOverlay) {
-    resizeOverlay = document.createElement('div');
-    resizeOverlay.style.cssText = `
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      z-index: 10002;
-      cursor: ew-resize;
-      background: transparent;
-      pointer-events: auto;
-    `;
-    document.body.appendChild(resizeOverlay);
-  }
-}
-
-function removeResizeOverlay() {
-  if (resizeOverlay) {
-    resizeOverlay.remove();
-    resizeOverlay = null;
-  }
-}
-
-// 챗봇 토글 함수
-function toggleChatbot() {
-  if (!chatbotIframe) {
-    createChatbotIframe();
-  }
-  
-  iframeVisible = !iframeVisible;
-  if (iframeVisible) {
-    chatbotIframe.style.display = 'block';
-    chatbotIframe.style.transform = 'translateX(0)';
-    fabButton.style.display = 'none';
-    hideSelectionToolbar();
-    
-    // 리사이즈 핸들 표시 및 위치 업데이트
-    if (resizeHandle) {
-      resizeHandle.style.display = 'block';
-      setTimeout(() => {
-        updateResizeHandlePosition();
-      }, 300); // 애니메이션 완료 후 위치 업데이트
+  document.addEventListener('mouseup', () => {
+    if (isResizing) {
+      isResizing = false;
+      // iframe의 포인터 이벤트 복원
+      chatbotIframe.style.pointerEvents = '';
+      document.body.style.cursor = '';
+      
+      // 너비 저장
+      const currentWidth = parseInt(window.getComputedStyle(chatbotSidebar).width, 10);
+      chrome.storage.local.set({ pdfChatbotWidth: currentWidth });
     }
-  } else {
-    chatbotIframe.style.transform = 'translateX(100%)';
-    setTimeout(() => {
-      chatbotIframe.style.display = 'none';
-    }, 300);
-    fabButton.style.display = 'flex';
-    if (resizeHandle) resizeHandle.style.display = 'none'; // 리사이즈 핸들 숨기기
-  }
+  });
+  
+  // 저장된 너비 복원
+  chrome.storage.local.get(['pdfChatbotWidth'], (result) => {
+    if (result.pdfChatbotWidth) {
+      chatbotSidebar.style.width = result.pdfChatbotWidth + 'px';
+      const pdfRenderContainer = document.getElementById('pdf-render-container');
+      if (pdfRenderContainer) {
+        pdfRenderContainer.style.right = result.pdfChatbotWidth + 'px';
+      }
+    }
+  });
 }
 
-// FAB 버튼 처리
+// DOMContentLoaded 이벤트 처리
 window.addEventListener('DOMContentLoaded', () => {
   console.log('PDF 뷰어 준비 완료');
-  
-  // FAB 버튼 표시 및 이벤트 리스너 추가
-  if (fabButton) {
-    fabButton.style.display = 'flex';
-    fabButton.addEventListener('click', () => {
-      console.log('FAB 버튼 클릭됨');
-      toggleChatbot();
-    });
-  }
+  initializeChatbotIframe();
 });
 
 
@@ -644,9 +580,7 @@ window.addEventListener("message", (event) => {
   const chatbotOrigin = new URL(chrome.runtime.getURL('chatbot_ui/chatbot.html')).origin;
   if (event.origin !== chatbotOrigin) return;
   
-  if (event.data.type === "CLOSE_CHATBOT") {
-    toggleChatbot();
-  } else if (event.data.type === "GET_SELECTED_TEXT") {
+  if (event.data.type === "GET_SELECTED_TEXT") {
     const selectedText = getSelectedText();
     chatbotIframe.contentWindow.postMessage({
       type: "SELECTED_TEXT_RESULT",
@@ -773,10 +707,7 @@ function handleTranslateClick(event) {
     return;
   }
   
-  // 챗봇이 열려있지 않으면 열기
-  if (!iframeVisible) {
-    toggleChatbot();
-  }
+  // 챗봇은 항상 열려있음 (사이드패널)
   
   // 선택된 텍스트 번역 요청 전송
   setTimeout(() => {
@@ -801,10 +732,7 @@ function handleSearchClick(event) {
     return;
   }
   
-  // 챗봇이 열려있지 않으면 열기
-  if (!iframeVisible) {
-    toggleChatbot();
-  }
+  // 챗봇은 항상 열려있음 (사이드패널)
   
   // 선택된 텍스트 검색 요청 전송
   setTimeout(() => {
@@ -1275,9 +1203,7 @@ translateButton.addEventListener('click', async () => {
     }
     
     // 챗봇이 열려있지 않으면 열기
-    if (!iframeVisible) {
-      toggleChatbot();
-    }
+    // 챗봇은 항상 열려있음 (사이드패널)
     
     // 챗봇에 번역 요청 전송
     setTimeout(() => {
@@ -1316,9 +1242,7 @@ summarizeButton.addEventListener('click', async () => {
     }
     
     // 챗봇이 열려있지 않으면 열기
-    if (!iframeVisible) {
-      toggleChatbot();
-    }
+    // 챗봇은 항상 열려있음 (사이드패널)
     
     // 챗봇에 요약 요청 전송
     setTimeout(() => {
@@ -1374,9 +1298,7 @@ summarizeFullButton.addEventListener('click', async () => {
     }
     
     // 챗봇이 열려있지 않으면 열기
-    if (!iframeVisible) {
-      toggleChatbot();
-    }
+    // 챗봇은 항상 열려있음 (사이드패널)
     
     // 챗봇에 요약 요청 전송
     setTimeout(() => {
@@ -1476,8 +1398,22 @@ window.addEventListener('DOMContentLoaded', () => {
     errorMessage.classList.remove('hidden');
     errorText.textContent = 'PDF 파일 경로가 지정되지 않았습니다.';
   }
+  
+  // Scroll event listener for continuous mode
+  const pdfRenderContainer = document.getElementById('pdf-render-container');
+  if (pdfRenderContainer) {
+    let scrollTimeout;
+    pdfRenderContainer.addEventListener('scroll', () => {
+      if (pageViewMode === 'continuous') {
+        // Debounce scroll events
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          window.continuousScroll.checkVisiblePages();
+        }, 100);
+      }
+    });
+  }
 });
 
 // 리사이즈 이벤트 리스너 추가
-document.addEventListener('mousemove', doResize);
-document.addEventListener('mouseup', stopResize);
+// 리사이즈 기능 제거됨

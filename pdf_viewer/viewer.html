@@ -75,6 +75,9 @@
     </div>
     
     <div id="pdf-viewer">
+      <div id="chatbot-sidebar">
+        <iframe id="gemini-chatbot-iframe" src=""></iframe>
+      </div>
       <div id="outline-sidebar" class="hidden">
         <div class="outline-header">
           <h3>목차</h3>
@@ -97,15 +100,8 @@
           </div>
         </div>
       </div>
-      <div id="pdf-render-container" class="single-page">
-        <div class="page-container" id="main-page-container">
-          <canvas id="pdf-canvas"></canvas>
-          <div id="text-layer" class="textLayer"></div>
-        </div>
-        <div class="page-container" id="second-page-container" style="display: none;">
-          <canvas id="pdf-canvas-2"></canvas>
-          <div id="text-layer-2" class="textLayer"></div>
-        </div>
+      <div id="pdf-render-container" class="continuous-scroll">
+        <!-- Pages will be dynamically added here -->
       </div>
     </div>
     
@@ -120,10 +116,6 @@
     </div>
   </div>
 
-  <!-- FAB 버튼 (채팅) -->
-  <div id="gemini-fab">
-    <img src="https://fonts.gstatic.com/s/i/short-term/release/materialsymbolsoutlined/chat_bubble/default/24px.svg" alt="Chat">
-  </div>
 
   <!-- 파일 접근 권한 팝업 -->
   <div id="file-access-popup" class="popup-overlay hidden">
@@ -149,6 +141,7 @@
 
   <script src="../lib/pdf.min.js"></script>
   <script src="../lib/i18n-helper.js"></script>
+  <script src="continuous_scroll.js"></script>
   <script src="viewer.js"></script>
 </body>
 </html>

@@ -275,6 +275,12 @@ async function initializeChatbot() {
     } else if (request.type === "IS_PDF_VIEWER_RESULT" || request.type === "PDF_PAGE_CONTENT_RESULT" || request.type === "PDF_PAGE_CONTENT_ERROR") {
       // PDF 뷰어 관련 응답은 Promise 리스너에서 처리되므로 여기서는 무시
       return;
+    } else if (request.type === "HIDE_CLOSE_BUTTON") {
+      // PDF 뷰어에서 close 버튼 숨기기
+      const closeBtn = document.getElementById('close-chatbot-btn');
+      if (closeBtn) {
+        closeBtn.style.display = 'none';
+      }
     }
   });
 
