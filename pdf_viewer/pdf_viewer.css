@@ -9,10 +9,20 @@
   right: 0;
   bottom: 0;
   overflow: hidden;
-  opacity: 0.2;
+  opacity: 1;
   line-height: 1;
   text-size-adjust: none;
   forced-color-adjust: none;
+}
+
+/* 하이라이트가 없을 때는 텍스트 레이어 숨기기 */
+.textLayer:not(:has(.highlight)) {
+  opacity: 0;
+}
+
+/* 하이라이트가 있을 때도 텍스트 레이어 자체는 약간 투명하게 */
+.textLayer:has(.highlight) {
+  opacity: 0.5;
 }
 
 .textLayer span,
@@ -24,6 +34,7 @@
   transform-origin: 0% 0%;
 }
 
+
 /* Only necessary in Google Chrome, see issue 14205, and most unfortunately
  * the problem doesn't show up in "text" reference tests. */
 .textLayer span.markedContent {
@@ -34,7 +45,7 @@
 .textLayer .highlight {
   margin: -1px;
   padding: 1px;
-  background-color: rgba(180, 0, 170, 1);
+  background-color: rgba(255, 235, 59, 0.4);
   border-radius: 4px;
 }
 
@@ -56,6 +67,10 @@
 
 .textLayer .highlight.selected {
   background-color: rgba(0, 100, 0, 1);
+}
+
+.textLayer .highlight.current {
+  background-color: rgba(180, 210, 180, 0.7) !important;
 }
 
 .textLayer ::selection {

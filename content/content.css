@@ -37,7 +37,7 @@
   box-shadow: -5px 0 15px rgba(0, 0, 0, 0.15);
   z-index: 10000;
   display: none; /* 초기에는 숨김 */
-  background-color: white; /* iframe 로딩 중 배경색 */
+  background-color: transparent; /* iframe 로딩 중 배경색 */
   transition: transform 0.3s ease-out;
   transform: translateX(100%); /* 오른쪽 바깥에 숨김 */
 }

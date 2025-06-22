@@ -13,65 +13,89 @@
   <div id="pdf-container">
     <div id="pdf-header">
       <div class="header-left">
-        <button id="toggle-outline" title="목차">
+        <button id="toggle-outline" title="목차" class="button-with-label">
           <span class="material-symbols-rounded">list</span>
+          <span class="button-label">목차</span>
         </button>
-        <span id="pdf-title">PDF 문서</span>
-      </div>
-      
-      <div class="header-center">
-        <button id="prev-page" title="이전 페이지">
-          <span class="material-symbols-rounded">chevron_left</span>
-        </button>
+        <div class="header-separator"></div>
         <span id="page-info">
           <input type="number" id="page-num" min="1" value="1">
           <span> / </span>
           <span id="page-count">0</span>
         </span>
-        <button id="next-page" title="다음 페이지">
-          <span class="material-symbols-rounded">chevron_right</span>
-        </button>
         <div class="header-separator"></div>
         <span id="zoom-level">100%</span>
-        <button id="zoom-out" title="축소">
+        <button id="zoom-out" title="축소" class="button-with-label">
           <span class="zoom-icon">-</span>
+          <span class="button-label">축소</span>
         </button>
-        <button id="zoom-in" title="확대">
+        <button id="zoom-in" title="확대" class="button-with-label">
           <span class="zoom-icon">+</span>
+          <span class="button-label">확대</span>
         </button>
-        <button id="fit-page" title="너비에 맞추기">
+        <button id="fit-page" title="너비에 맞추기" class="button-with-label">
           <span class="material-symbols-outlined">fit_page_width</span>
+          <span class="button-label">맞추기</span>
         </button>
         <div class="header-separator"></div>
-        <button id="rotate-page" title="회전">
-          <span class="material-symbols-rounded">rotate_right</span>
+        <button id="search-btn" title="검색" class="button-with-label">
+          <span class="material-symbols-rounded">search</span>
+          <span class="button-label">검색</span>
         </button>
-        <button id="page-view-mode" title="페이지 보기 모드">
-          <span class="material-symbols-rounded">auto_stories</span>
+        <button id="translate-page" title="현재 페이지 번역" class="button-with-label">
+          <span class="material-symbols-rounded">translate</span>
+          <span class="button-label">번역</span>
+        </button>
+        <button id="summarize-page" title="현재 페이지 요약" class="button-with-label">
+          <span class="material-symbols-rounded">summarize</span>
+          <span class="button-label">요약</span>
+        </button>
+        <button id="summarize-full" title="전체 PDF 요약" class="button-with-label">
+          <span class="material-symbols-rounded">auto_awesome</span>
+          <span class="button-label">전체요약</span>
         </button>
       </div>
       
+      <div class="header-center">
+      </div>
+      
       <div class="header-right">
-        <button id="translate-page" title="현재 페이지 번역">
-          <span class="material-symbols-rounded">translate</span>
-        </button>
-        <button id="summarize-page" title="현재 페이지 요약">
-          <span class="material-symbols-rounded">summarize</span>
-        </button>
-        <button id="summarize-full" title="전체 PDF 요약">
-          <span class="material-symbols-rounded">auto_awesome</span>
-        </button>
-        <div class="header-separator"></div>
-        <button id="print-pdf" title="인쇄">
+        <button id="print-pdf" title="인쇄" class="button-with-label">
           <span class="material-symbols-rounded">print</span>
+          <span class="button-label">인쇄</span>
         </button>
-        <button id="download-pdf" title="다운로드">
+        <button id="download-pdf" title="다운로드" class="button-with-label">
           <span class="material-symbols-rounded">download</span>
+          <span class="button-label">다운로드</span>
         </button>
-        <button id="toggle-fullscreen" title="전체화면">
+        <button id="toggle-fullscreen" title="전체화면" class="button-with-label">
           <span class="material-symbols-rounded">fullscreen</span>
+          <span class="button-label">전체화면</span>
         </button>
       </div>
+    </div>
+    
+    <!-- 검색 UI 컨테이너 -->
+    <div id="search-container" class="search-container hidden">
+      <input type="text" id="search-input" placeholder="문서에서 찾기..." class="search-input">
+      <button id="search-prev" class="search-nav-btn" title="이전">
+        <span class="material-symbols-rounded">arrow_back</span>
+      </button>
+      <button id="search-next" class="search-nav-btn" title="다음">
+        <span class="material-symbols-rounded">arrow_forward</span>
+      </button>
+      <span id="search-count" class="search-count hidden">1/n 일치</span>
+      <button id="highlight-all" class="search-option-btn" title="모두 강조 표시">
+        <span class="material-symbols-rounded">highlight</span>
+        <span class="button-text">모두 강조 표시</span>
+      </button>
+      <button id="case-sensitive" class="search-option-btn" title="대/소문자 구분">
+        <span class="material-symbols-rounded">match_case</span>
+        <span class="button-text">대/소문자 구분</span>
+      </button>
+      <button id="search-close" class="search-close-btn" title="닫기">
+        <span class="material-symbols-rounded">close</span>
+      </button>
     </div>
     
     <div id="pdf-viewer">
@@ -143,5 +167,6 @@
   <script src="../lib/i18n-helper.js"></script>
   <script src="continuous_scroll.js"></script>
   <script src="viewer.js"></script>
+  <script src="search.js"></script>
 </body>
 </html>

@@ -17,8 +17,8 @@ let fitMode = 'none'; // 'width' 또는 'none'
 // Canvas elements will be created dynamically for continuous mode
 
 // UI 요소들
-const prevButton = document.getElementById('prev-page');
-const nextButton = document.getElementById('next-page');
+// const prevButton = document.getElementById('prev-page'); // 버튼 제거됨
+// const nextButton = document.getElementById('next-page'); // 버튼 제거됨
 const pageNumInput = document.getElementById('page-num');
 const pageCountSpan = document.getElementById('page-count');
 const zoomInButton = document.getElementById('zoom-in');
@@ -28,7 +28,7 @@ const fitPageButton = document.getElementById('fit-page');
 const loadingIndicator = document.getElementById('loading-indicator');
 const errorMessage = document.getElementById('error-message');
 const errorText = document.getElementById('error-text');
-const pdfTitle = document.getElementById('pdf-title');
+// const pdfTitle = document.getElementById('pdf-title'); // 요소 제거됨
 // FAB button removed - using sidebar instead
 
 // URL에서 PDF 파일 경로 가져오기
@@ -111,6 +111,7 @@ async function loadPdf(url) {
     });
     
     pdfDoc = await loadingTask.promise;
+    window.pdfDoc = pdfDoc; // 전역으로 노출
     console.log('PDF 문서 로드 완료, 페이지 수:', pdfDoc.numPages);
     
     pageCountSpan.textContent = pdfDoc.numPages;
@@ -119,11 +120,11 @@ async function loadPdf(url) {
     // 문서 제목 설정
     const info = await pdfDoc.getMetadata();
     if (info.info && info.info.Title) {
-      pdfTitle.textContent = info.info.Title;
+      // pdfTitle.textContent = info.info.Title; // 요소 제거됨
       document.title = `${info.info.Title} - PDF 뷰어`;
     } else {
       const filename = url.split('/').pop().split('?')[0];
-      pdfTitle.textContent = decodeURIComponent(filename);
+      // pdfTitle.textContent = decodeURIComponent(filename); // 요소 제거됨
       document.title = `${decodeURIComponent(filename)} - PDF 뷰어`;
     }
     
@@ -390,8 +391,8 @@ function fitPage() {
 }
 
 // 이벤트 리스너
-prevButton.addEventListener('click', onPrevPage);
-nextButton.addEventListener('click', onNextPage);
+// prevButton.addEventListener('click', onPrevPage); // 버튼 제거됨
+// nextButton.addEventListener('click', onNextPage); // 버튼 제거됨
 zoomInButton.addEventListener('click', zoomIn);
 zoomOutButton.addEventListener('click', zoomOut);
 fitPageButton.addEventListener('click', fitPage);
@@ -899,8 +900,8 @@ const fullscreenButton = document.getElementById('toggle-fullscreen');
 const pdfContainer = document.getElementById('pdf-container');
 const previewViewBtn = document.getElementById('preview-view-btn');
 const listViewBtn = document.getElementById('list-view-btn');
-const rotateButton = document.getElementById('rotate-page');
-const pageViewModeButton = document.getElementById('page-view-mode');
+// const rotateButton = document.getElementById('rotate-page'); // 버튼 제거됨
+// const pageViewModeButton = document.getElementById('page-view-mode'); // 버튼 제거됨
 const pdfRenderContainer = document.getElementById('pdf-render-container');
 const mainPageContainer = document.getElementById('main-page-container');
 const secondPageContainer = document.getElementById('second-page-container');
@@ -1087,36 +1088,36 @@ function renderOutlineItems(items, container, level) {
   });
 }
 
-// 회전 기능
-rotateButton.addEventListener('click', () => {
-  rotation = (rotation + 90) % 360;
-  queueRenderPage(pageNum);
-});
+// 회전 기능 - 버튼이 제거되어 주석 처리
+// rotateButton.addEventListener('click', () => {
+//   rotation = (rotation + 90) % 360;
+//   queueRenderPage(pageNum);
+// });
 
-// 페이지 뷰 모드 전환
-pageViewModeButton.addEventListener('click', () => {
-  if (pageViewMode === 'single') {
-    pageViewMode = 'double';
-    pdfRenderContainer.classList.remove('single-page');
-    pdfRenderContainer.classList.add('double-page');
-    pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'menu_book';
-    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerSinglePage');
-    
-    // 홀수 페이지로 조정
-    if (pageNum % 2 === 0) {
-      pageNum--;
-      pageNumInput.value = pageNum;
-    }
-  } else {
-    pageViewMode = 'single';
-    pdfRenderContainer.classList.remove('double-page');
-    pdfRenderContainer.classList.add('single-page');
-    pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'auto_stories';
-    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerDoublePage');
-  }
-  
-  queueRenderPage(pageNum);
-});
+// 페이지 뷰 모드 전환 - 버튼이 제거되어 주석 처리
+// pageViewModeButton.addEventListener('click', () => {
+//   if (pageViewMode === 'single') {
+//     pageViewMode = 'double';
+//     pdfRenderContainer.classList.remove('single-page');
+//     pdfRenderContainer.classList.add('double-page');
+//     pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'menu_book';
+//     pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerSinglePage');
+//     
+//     // 홀수 페이지로 조정
+//     if (pageNum % 2 === 0) {
+//       pageNum--;
+//       pageNumInput.value = pageNum;
+//     }
+//   } else {
+//     pageViewMode = 'single';
+//     pdfRenderContainer.classList.remove('double-page');
+//     pdfRenderContainer.classList.add('single-page');
+//     pageViewModeButton.querySelector('.material-symbols-rounded').textContent = 'auto_stories';
+//     pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerDoublePage');
+//   }
+//   
+//   queueRenderPage(pageNum);
+// });
 
 // 인쇄 기능
 printButton.addEventListener('click', () => {
@@ -1345,8 +1346,8 @@ function applyI18nToButtons() {
   toggleOutlineButton.title = chrome.i18n.getMessage('pdfViewerOutline');
   
   // 페이지 네비게이션
-  prevButton.title = chrome.i18n.getMessage('pdfViewerPrevPage');
-  nextButton.title = chrome.i18n.getMessage('pdfViewerNextPage');
+  // prevButton.title = chrome.i18n.getMessage('pdfViewerPrevPage'); // 버튼 제거됨
+  // nextButton.title = chrome.i18n.getMessage('pdfViewerNextPage'); // 버튼 제거됨
   
   // 줌 버튼
   zoomOutButton.title = chrome.i18n.getMessage('pdfViewerZoomOut');
@@ -1359,15 +1360,15 @@ function applyI18nToButtons() {
     fitPageButton.title = chrome.i18n.getMessage('pdfViewerActualSize');
   }
   
-  // 회전 버튼
-  rotateButton.title = chrome.i18n.getMessage('pdfViewerRotate');
+  // 회전 버튼 - 버튼이 제거되어 주석 처리
+  // rotateButton.title = chrome.i18n.getMessage('pdfViewerRotate');
   
-  // 페이지 보기 모드 버튼
-  if (pageViewMode === 'single') {
-    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerDoublePage');
-  } else {
-    pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerSinglePage');
-  }
+  // 페이지 보기 모드 버튼 - 버튼이 제거되어 주석 처리
+  // if (pageViewMode === 'single') {
+  //   pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerDoublePage');
+  // } else {
+  //   pageViewModeButton.title = chrome.i18n.getMessage('pdfViewerSinglePage');
+  // }
   
   // 번역 및 요약 버튼
   translateButton.title = chrome.i18n.getMessage('pdfViewerTranslatePage');

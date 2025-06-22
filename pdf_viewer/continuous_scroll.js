@@ -5,6 +5,9 @@ let renderedPages = new Map(); // Track rendered pages
 let visiblePages = new Set(); // Currently visible pages
 let pageContainers = new Map(); // Page container elements
 
+// Expose visiblePages globally for search functionality
+window.visiblePages = visiblePages;
+
 // Create all page containers
 async function createAllPageContainers() {
   console.log('Creating all page containers for', pdfDoc.numPages, 'pages');
@@ -102,7 +105,7 @@ async function renderContinuousPage(pageNumber) {
     // Render text layer
     textLayer.innerHTML = '';
     const textContent = await page.getTextContent();
-    pdfjsLib.renderTextLayer({
+    await pdfjsLib.renderTextLayer({
       textContent: textContent,
       container: textLayer,
       viewport: viewport,
@@ -111,6 +114,26 @@ async function renderContinuousPage(pageNumber) {
     
     renderedPages.set(pageNumber, true);
     console.log(`Page ${pageNumber} rendered successfully`);
+    
+    // If search is active and this page has results, re-apply highlights immediately
+    if (window.pdfSearch && window.pdfSearch.searchResults.length > 0 && window.pdfSearch.searchInput.value.trim()) {
+      const hasResultsOnPage = window.pdfSearch.searchResults.some(result => result.pageNum === pageNumber);
+      if (hasResultsOnPage) {
+        setTimeout(() => {
+          const textLayer = document.getElementById(`text-layer-${pageNumber}`);
+          if (textLayer && textLayer.children.length > 0) {
+            if (window.pdfSearch.highlightAll) {
+              window.pdfSearch.applyHighlightsToTextLayer(textLayer, window.pdfSearch.searchInput.value.trim(), pageNumber);
+            } else if (window.pdfSearch.currentResultIndex >= 0) {
+              const currentResult = window.pdfSearch.searchResults[window.pdfSearch.currentResultIndex];
+              if (currentResult && currentResult.pageNum === pageNumber) {
+                window.pdfSearch.highlightCurrentResult();
+              }
+            }
+          }
+        }, 100);
+      }
+    }
   } catch (error) {
     console.error(`페이지 ${pageNumber} 렌더링 오류:`, error);
   }
@@ -125,7 +148,8 @@ function checkVisiblePages() {
   
   const containerRect = container.getBoundingClientRect();
   const newVisiblePages = new Set();
-  let firstVisiblePage = null;
+  let mostVisiblePage = null;
+  let maxVisibleHeight = 0;
   
   // Check all page containers
   for (let i = 1; i <= pdfDoc.numPages; i++) {
@@ -140,9 +164,15 @@ function checkVisiblePages() {
     if (pageBottom >= -200 && pageTop <= container.clientHeight + 200) {
       newVisiblePages.add(i);
       
-      // Track the first visible page
-      if (firstVisiblePage === null || i < firstVisiblePage) {
-        firstVisiblePage = i;
+      // Calculate visible height of this page
+      const visibleTop = Math.max(0, pageTop);
+      const visibleBottom = Math.min(container.clientHeight, pageBottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+      
+      // Track the page with the most visible content
+      if (visibleHeight > maxVisibleHeight) {
+        maxVisibleHeight = visibleHeight;
+        mostVisiblePage = i;
       }
       
       // Render if not already rendered
@@ -153,14 +183,16 @@ function checkVisiblePages() {
   }
   
   visiblePages = newVisiblePages;
-  console.log('Visible pages:', Array.from(newVisiblePages), 'First visible:', firstVisiblePage);
+  window.visiblePages = visiblePages; // Update global reference
+  console.log('Visible pages:', Array.from(newVisiblePages), 'Most visible:', mostVisiblePage, 'Height:', maxVisibleHeight);
   
   // Update current page number based on the most visible page
-  if (firstVisiblePage !== null && firstVisiblePage !== pageNum) {
-    pageNum = firstVisiblePage;
+  if (mostVisiblePage !== null && mostVisiblePage !== window.pageNum) {
+    console.log('Updating page number from', window.pageNum, 'to', mostVisiblePage);
+    window.pageNum = mostVisiblePage;
     const pageNumInput = document.getElementById('page-num');
     if (pageNumInput) {
-      pageNumInput.value = pageNum;
+      pageNumInput.value = mostVisiblePage;
     }
   }
 }
@@ -168,8 +200,16 @@ function checkVisiblePages() {
 // Re-render all pages (for zoom, rotation, etc.)
 async function rerenderAllPages() {
   renderedPages.clear();
-  createAllPageContainers();
+  await createAllPageContainers();
   checkVisiblePages();
+  
+  // Re-apply search highlights if search is active
+  if (window.pdfSearch && window.pdfSearch.searchResults.length > 0) {
+    // Give time for text layers to render
+    setTimeout(() => {
+      window.pdfSearch.reapplyHighlights();
+    }, 500);
+  }
 }
 
 // Scroll to specific page

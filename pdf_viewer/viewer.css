@@ -26,12 +26,14 @@ body {
   align-items: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   z-index: 10;
+  overflow: visible;
 }
 
 .header-left, .header-right {
   display: flex;
   align-items: center;
   gap: 10px;
+  overflow: visible;
 }
 
 .header-center {
@@ -262,7 +264,7 @@ body {
   right: 0;
   width: 400px;
   height: 100%;
-  background-color: white;
+  background-color: transparent;
   box-shadow: -2px 0 5px rgba(0,0,0,0.1);
   z-index: 100;
   display: flex;
@@ -271,6 +273,143 @@ body {
   min-width: 300px;
   max-width: 50%;
 }
+
+/* 버튼 라벨 스타일 */
+.button-with-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px !important;
+  height: auto !important;
+  min-height: 50px;
+}
+
+.button-label {
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* 헤더 높이 조정 */
+#pdf-header {
+  padding: 8px 20px;
+  min-height: 60px;
+}
+
+/* 검색 UI 스타일 */
+.search-container {
+  position: fixed;
+  top: inherit;
+  left: inherit;
+  background-color: #323639;
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 4px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  z-index: 1000;
+  white-space: nowrap;
+}
+
+.search-container.hidden {
+  display: none;
+}
+
+.search-input {
+  width: 250px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background-color: rgba(255,255,255,0.1);
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.search-input:focus {
+  border-color: rgba(255,255,255,0.4);
+  background-color: rgba(255,255,255,0.15);
+}
+
+.search-input::placeholder {
+  color: rgba(255,255,255,0.5);
+}
+
+.search-nav-btn,
+.search-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.2s;
+}
+
+.search-nav-btn:hover,
+.search-close-btn:hover {
+  background-color: rgba(255,255,255,0.1);
+}
+
+.search-nav-btn .material-symbols-rounded,
+.search-close-btn .material-symbols-rounded {
+  font-size: 20px;
+}
+
+.search-count {
+  padding: 4px 8px;
+  background-color: rgba(255,255,255,0.1);
+  border-radius: 4px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.8);
+  white-space: nowrap;
+}
+
+.search-count.hidden {
+  display: none;
+}
+
+.search-option-btn {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: white;
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.search-option-btn:hover {
+  background-color: rgba(255,255,255,0.1);
+  border-color: rgba(255,255,255,0.3);
+}
+
+.search-option-btn.active {
+  background-color: rgba(99, 102, 241, 0.3);
+  border-color: #6366f1;
+}
+
+.search-option-btn .material-symbols-rounded {
+  font-size: 18px;
+}
+
+.search-option-btn .button-text {
+  font-weight: 400;
+}
+
+/* 텍스트 하이라이팅 스타일 - pdf_viewer.css로 이동됨 */
 
 /* PDF 뷰어에서 챗봇 닫기 버튼 숨기기 */
 #gemini-chatbot-iframe {
