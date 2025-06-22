@@ -119,6 +119,7 @@ class PDFSearch {
   
   openSearch() {
     this.searchContainer.classList.remove('hidden');
+    this.searchBtn.classList.add('active');
     
     // 검색 버튼의 위치를 기준으로 팝업 위치 설정
     const searchBtnRect = this.searchBtn.getBoundingClientRect();
@@ -131,6 +132,7 @@ class PDFSearch {
   
   closeSearch() {
     this.searchContainer.classList.add('hidden');
+    this.searchBtn.classList.remove('active');
     this.clearHighlights();
     this.searchInput.value = '';
     this.searchCount.classList.add('hidden');

@@ -75,6 +75,10 @@ body {
   background-color: rgba(255,255,255,0.2);
 }
 
+#pdf-header button.active {
+  background-color: rgba(255,255,255,0.1);
+}
+
 #page-info {
   display: flex;
   align-items: center;

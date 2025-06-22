@@ -940,6 +940,13 @@ toggleOutlineButton.addEventListener('click', () => {
   outlineSidebar.classList.toggle('hidden');
   pdfViewer.classList.toggle('with-sidebar');
   
+  // 목차 버튼 active 상태 토글
+  if (!outlineSidebar.classList.contains('hidden')) {
+    toggleOutlineButton.classList.add('active');
+  } else {
+    toggleOutlineButton.classList.remove('active');
+  }
+  
   // 목차가 열릴 때 로드
   if (!outlineSidebar.classList.contains('hidden') && pdfDoc) {
     loadOutline();
@@ -950,6 +957,7 @@ toggleOutlineButton.addEventListener('click', () => {
 closeOutlineButton.addEventListener('click', () => {
   outlineSidebar.classList.add('hidden');
   pdfViewer.classList.remove('with-sidebar');
+  toggleOutlineButton.classList.remove('active');
 });
 
 // 목차 로드
